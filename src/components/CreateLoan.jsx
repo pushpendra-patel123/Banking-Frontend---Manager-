@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function CreateLoan() {
-  const { customerId,savingAc } = useParams();
+  const { customerId } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -35,49 +35,49 @@ export default function CreateLoan() {
   const token = sessionStorage.getItem("token");
 
   const validateForm = () => {
-  const newErrors = {};
+    const newErrors = {};
 
-  // Loan Amount
-  if (!formData.loanPrincipalAmount) {
-    newErrors.loanPrincipalAmount = "Loan amount is required";
-  } else if (Number(formData.loanPrincipalAmount) <= 0) {
-    newErrors.loanPrincipalAmount = "Loan amount must be greater than 0";
-  }
+    // Loan Amount
+    if (!formData.loanPrincipalAmount) {
+      newErrors.loanPrincipalAmount = "Loan amount is required";
+    } else if (Number(formData.loanPrincipalAmount) <= 0) {
+      newErrors.loanPrincipalAmount = "Loan amount must be greater than 0";
+    }
 
-  // Loan Tenure
-  if (!formData.loanTenure) {
-    newErrors.loanTenure = "Loan tenure is required";
-  } else if (Number(formData.loanTenure) <= 0) {
-    newErrors.loanTenure = "Tenure must be greater than 0";
-  }
+    // Loan Tenure
+    if (!formData.loanTenure) {
+      newErrors.loanTenure = "Loan tenure is required";
+    } else if (Number(formData.loanTenure) <= 0) {
+      newErrors.loanTenure = "Tenure must be greater than 0";
+    }
 
-  // Interest Rate
-  if (!formData.loanInterestRate) {
-    newErrors.loanInterestRate = "Interest rate is required";
-  } else if (Number(formData.loanInterestRate) <= 0) {
-    newErrors.loanInterestRate = "Interest rate must be greater than 0%";
-  } else if (Number(formData.loanInterestRate) > 50) {
-    newErrors.loanInterestRate = "Interest rate cannot exceed 50%";
-  }
+    // Interest Rate
+    if (!formData.loanInterestRate) {
+      newErrors.loanInterestRate = "Interest rate is required";
+    } else if (Number(formData.loanInterestRate) <= 0) {
+      newErrors.loanInterestRate = "Interest rate must be greater than 0%";
+    } else if (Number(formData.loanInterestRate) > 99.99) {
+      newErrors.loanInterestRate = "Interest rate cannot exceed 99.99%";
+    }
 
-  // Tenure Type
-  if (!formData.loanTenureType) {
-    newErrors.loanTenureType = "Please select tenure type";
-  }
+    // Tenure Type
+    if (!formData.loanTenureType) {
+      newErrors.loanTenureType = "Please select tenure type";
+    }
 
-  // EMI Frequency
-  if (!formData.loanEMIFrequency) {
-    newErrors.loanEMIFrequency = "Please select EMI frequency";
-  }
+    // EMI Frequency
+    if (!formData.loanEMIFrequency) {
+      newErrors.loanEMIFrequency = "Please select EMI frequency";
+    }
 
-  // Loan Type
-  if (!formData.loanType) {
-    newErrors.loanType = "Please select loan type";
-  }
+    // Loan Type
+    if (!formData.loanType) {
+      newErrors.loanType = "Please select loan type";
+    }
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 
   const handleSubmit = async (e) => {
@@ -153,6 +153,11 @@ export default function CreateLoan() {
             name="loanPrincipalAmount"
             value={formData.loanPrincipalAmount}
             onChange={handleChange}
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.loanPrincipalAmount ? "border-red-500" : "border-gray-300"
               }`}
             placeholder="Enter principal amount"
@@ -172,7 +177,7 @@ export default function CreateLoan() {
           >
             Loan Tenure *
           </label>
-          <input
+          {/* <input
             type="number"
             id="loanTenure"
             name="loanTenure"
@@ -180,15 +185,51 @@ export default function CreateLoan() {
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.loanTenure ? "border-red-500" : "border-gray-300"
               }`}
-            placeholder="Enter tenure (e.g., 3)"
+            placeholder="Enter tenure (e.g. 12)"
+          /> */}
+
+
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={formData.loanTenure}
+            onChange={(e) => {
+              const raw = e.target.value;
+
+              // Show error if decimal point is typed
+              if (raw.includes(".")) {
+                setErrors((prev) => ({
+                  ...prev,
+                  loanTenure: "Decimal values are not allowed in RD Tenure",
+                }));
+                return; // Don't update the value
+              }
+
+              // Strip any non-digit characters and limit to 3 digits
+              const value = raw.replace(/\D/g, "").slice(0, 3);
+
+              setFormData((prev) => ({ ...prev, loanTenure: value }));
+
+              // Clear error if valid
+              if (value) {
+                setErrors((prev) => ({ ...prev, loanTenure: "" }));
+              }
+            }}
+            maxLength={3}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.rdTenure ? "border-red-500" : "border-gray-300"
+              }`}
+            placeholder="Enter tenure in months (e.g., 36)"
           />
+
+
           {errors.loanTenure && (
             <p className="mt-1 text-sm text-red-600">{errors.loanTenure}</p>
           )}
         </div>
 
 
-    {/* Loan Tenure Type */}
+        {/* Loan Tenure Type */}
         <div>
           <label
             htmlFor="loanTenureType"
@@ -210,27 +251,62 @@ export default function CreateLoan() {
 
         <div>
           <label
-            htmlFor="loanTenure"
+            htmlFor="loanInterestRate"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             Loan Interest Rate *
           </label>
+
           <input
-            type="number"
+            type="text"
             id="loanInterestRate"
             name="loanInterestRate"
+            inputMode="decimal"
             value={formData.loanInterestRate}
-            onChange={handleChange}
+            onChange={(e) => {
+              let value = e.target.value;
+
+              // ✅ allow only numbers + one decimal
+              if (!/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
+                setErrors((prev) => ({
+                  ...prev,
+                  loanInterestRate: "Only format like 10.55 allowed",
+                }));
+                return;
+              }
+
+              // ✅ max 99.99
+              if (Number(value) > 99.99) {
+                setErrors((prev) => ({
+                  ...prev,
+                  loanInterestRate: "Max value 99.99 allowed",
+                }));
+                return;
+              }
+
+              setFormData((prev) => ({
+                ...prev,
+                loanInterestRate: value,
+              }));
+
+              // clear error
+              setErrors((prev) => ({
+                ...prev,
+                loanInterestRate: "",
+              }));
+            }}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.loanInterestRate ? "border-red-500" : "border-gray-300"
               }`}
-            placeholder="Enter tenure (e.g., 3)"
+            placeholder="Enter interest rate (e.g., 10.5)"
           />
-         {errors.loanInterestRate && (
-  <p className="mt-1 text-sm text-red-600">{errors.loanInterestRate}</p>
-)}
+
+          {errors.loanInterestRate && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.loanInterestRate}
+            </p>
+          )}
         </div>
 
-    
 
         {/* EMI Frequency */}
         <div>
@@ -286,8 +362,8 @@ export default function CreateLoan() {
             type="submit"
             disabled={isSubmitting}
             className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
           >
             {isSubmitting ? "Creating Loan..." : "Create Loan"}

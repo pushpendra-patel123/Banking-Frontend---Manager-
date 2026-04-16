@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { X, CreditCard, Smartphone, Building, Banknote } from 'lucide-react';
 import axios from 'axios';
 
-export default function FDDepositModal({fd,customerId,savingAc}) {
+export default function FDDepositModal({ fd, customerId, savingAc }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    customerId:customerId|| '',
-    fdAccountNumber:fd?.fdAccountNumber ||  '',
+    customerId: customerId || '',
+    fdAccountNumber: fd?.fdAccountNumber || '',
     transactionType: 'deposit',
     amount: fd.fdPrincipalAmount,
-    mode: ''
+    mode: 'bankTransfer'
   });
-  const [errors, setErrors] = useState({}); 
+  const [errors, setErrors] = useState({});
 
   const paymentModes = [
     { value: 'upi', label: 'UPI', icon: <Smartphone className="w-4 h-4" /> },
@@ -74,50 +74,50 @@ export default function FDDepositModal({fd,customerId,savingAc}) {
     return Object.keys(newErrors).length === 0;
   };
 
- const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) {
-    return;
-  }
+    if (!validateForm()) {
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    console.log("Depositing to FD:", formData);
+    try {
+      console.log("Depositing to FD:", formData);
 
-    // Actual API call
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/transactionSchemes/fdTransaction`, // 🔹 replace with your backend endpoint
-      formData,
-      {
-           headers: {
+      // Actual API call
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/transactionSchemes/fdTransaction`, // 🔹 replace with your backend endpoint
+        formData,
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         }
-    );
+      );
 
-    if (response.data.success) {
-      alert("Deposit processed successfully!");
-      closeModal();
+      if (response.data.success) {
+        alert("Deposit processed successfully! Approve the Payment to complete the transaction");
+        closeModal();
 
-      // Optionally refresh FD list after deposit
-      // fetchCustomerDetails();
-    } else {
-      alert(response.data.message || "Failed to process deposit.");
-    }
-  } catch (error) {
-    console.error("Error processing deposit:", error);
-    alert(
-      error.response?.data?.message ||
+        // Optionally refresh FD list after deposit
+        // fetchCustomerDetails();
+      } else {
+        alert(response.data.message || "Failed to process deposit.");
+      }
+    } catch (error) {
+      console.error("Error processing deposit:", error);
+      alert(
+        error.response?.data?.message ||
         "Failed to process deposit. Please try again."
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const openModal = () => {
     setIsOpen(true);
@@ -173,7 +173,7 @@ const handleSubmit = async (e) => {
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {/* Customer ID */}
-           
+
 
               {/* FD Account Number */}
               <div>
@@ -187,9 +187,8 @@ const handleSubmit = async (e) => {
                   name="fdAccountNumber"
                   value={formData.fdAccountNumber}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.fdAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${errors.fdAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., FD1758346167890"
                 />
                 {errors.fdAccountNumber && (
@@ -219,9 +218,8 @@ const handleSubmit = async (e) => {
                   disabled
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., 1500000"
                   min="1000"
                 />
@@ -236,7 +234,7 @@ const handleSubmit = async (e) => {
               </div>
 
               {/* Payment Mode */}
-              <div>
+              {/* <div>
                 <label htmlFor="mode" className="block text-sm font-medium text-gray-700 mb-2">
                   Payment Mode *
                 </label>
@@ -244,11 +242,10 @@ const handleSubmit = async (e) => {
                   {paymentModes.map((mode) => (
                     <label
                       key={mode.value}
-                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                        formData.mode === mode.value
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${formData.mode === mode.value
                           ? 'border-green-500 bg-green-50 text-green-700'
                           : 'border-gray-300 hover:border-green-300'
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -268,7 +265,7 @@ const handleSubmit = async (e) => {
                 {errors.mode && (
                   <p className="mt-1 text-sm text-red-600">{errors.mode}</p>
                 )}
-              </div>
+              </div> */}
             </form>
 
             {/* Transaction Summary */}
@@ -317,11 +314,10 @@ const handleSubmit = async (e) => {
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isSubmitting
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

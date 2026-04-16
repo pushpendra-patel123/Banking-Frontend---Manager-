@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, CreditCard, Smartphone, Banknote } from 'lucide-react';
 import axios from 'axios';
 
-export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savingAc }) {
+export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId, savingAc }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
     lakhpatiYojanaAccountNumber: lakhpatiSchemes?.lakhpatiYojanaAccountNumber || '',
     transactionType: 'emi',
     amount: lakhpatiSchemes?.lakhpatiYojanaInstallAmount || '',
-    mode: ''
+    mode: 'bankTransfer'
   });
   const [errors, setErrors] = useState({});
 
@@ -83,7 +83,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
       );
 
       if (response.data.success) {
-        alert('Lakhpati EMI processed successfully!');
+        alert('Lakhpati EMI processed successfully! Approve the Payment to complete the Transaction');
         closeModal();
       } else {
         alert(response.data.message || 'Failed to process EMI.');
@@ -131,7 +131,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
@@ -161,9 +161,8 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
                   value={formData.lakhpatiYojanaAccountNumber}
                   disabled
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg ${
-                    errors.lakhpatiYojanaAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg ${errors.lakhpatiYojanaAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., LP1758346216646"
                 />
                 {errors.lakhpatiYojanaAccountNumber && (
@@ -183,9 +182,8 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
                   name="amount"
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., 4000"
                   min="100"
                 />
@@ -200,7 +198,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
               </div>
 
               {/* Payment Mode */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Payment Mode *
                 </label>
@@ -232,7 +230,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
                 {errors.mode && (
                   <p className="mt-1 text-sm text-red-600">{errors.mode}</p>
                 )}
-              </div>
+              </div> */}
             </form>
 
             {/* Summary */}
@@ -245,7 +243,7 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
                   <div className="flex justify-between">
                     <span className="text-green-700">Saving Ac Number:</span>
                     <span className="font-medium text-green-800">
-                      {savingAc|| '-'}
+                      {savingAc || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -283,11 +281,10 @@ export default function LakhpatiEmiPayModal({ lakhpatiSchemes, customerId ,savin
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium ${
-                  isSubmitting
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium ${isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
               >
                 {isSubmitting ? 'Processing...' : 'Pay EMI'}
               </button>

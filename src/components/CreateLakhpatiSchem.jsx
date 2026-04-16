@@ -2,6 +2,17 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+// Installment options mapped by tenure (years)
+// First option in each array is auto-selected when tenure changes
+const TENURE_INSTALL_MAP = {
+  "2": [3740, 2400],
+  "3": [2400, 1650],
+  "4": [1650, 1350],
+  "5": [1350],
+};
+
+const MATURITY_AMOUNT = 100000;
+
 export default function CreateLakhpatiSchem() {
   const { customerId, savingAc } = useParams();
   const navigate = useNavigate();
@@ -9,25 +20,32 @@ export default function CreateLakhpatiSchem() {
   const [formData, setFormData] = useState({
     tenure: "3",
     tenureType: "year",
-    InstallAmount: "",
-    maturityAmount: 100000,
+    InstallAmount: String(TENURE_INSTALL_MAP["3"][0]), // auto-select first for default tenure
+    maturityAmount: MATURITY_AMOUNT,
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleTenureChange = (e) => {
+    const selectedTenure = e.target.value;
+    const firstInstall = TENURE_INSTALL_MAP[selectedTenure]?.[0] ?? "";
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      tenure: selectedTenure,
+      InstallAmount: String(firstInstall), // auto-select first installment
     }));
 
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+    if (errors.tenure) {
+      setErrors((prev) => ({ ...prev, tenure: "" }));
+    }
+  };
+
+  const handleInstallChange = (e) => {
+    setFormData((prev) => ({ ...prev, InstallAmount: e.target.value }));
+    if (errors.InstallAmount) {
+      setErrors((prev) => ({ ...prev, InstallAmount: "" }));
     }
   };
 
@@ -36,19 +54,10 @@ export default function CreateLakhpatiSchem() {
 
     if (!formData.tenure) {
       newErrors.tenure = "Tenure is required";
-    } else if (formData.tenure <= 0) {
-      newErrors.tenure = "Tenure must be greater than 0";
     }
 
     if (!formData.InstallAmount) {
       newErrors.InstallAmount = "Installment Amount is required";
-    } else if (Number(formData.InstallAmount) < 500) {
-      newErrors.InstallAmount =
-        "Minimum installment amount is ₹500";
-    }
-
-    if (!formData.maturityAmount) {
-      newErrors.maturityAmount = "Maturity Amount is required";
     }
 
     setErrors(newErrors);
@@ -76,11 +85,12 @@ export default function CreateLakhpatiSchem() {
 
       if (response.data.success) {
         alert("✅ Lakhpati Yojana created successfully!");
+        const defaultTenure = "3";
         setFormData({
-          tenure: "",
-          tenureType: "month",
-          InstallAmount: "",
-          maturityAmount: "",
+          tenure: defaultTenure,
+          tenureType: "year",
+          InstallAmount: String(TENURE_INSTALL_MAP[defaultTenure][0]),
+          maturityAmount: MATURITY_AMOUNT,
         });
         navigate(-1);
       } else {
@@ -90,12 +100,14 @@ export default function CreateLakhpatiSchem() {
       console.error("Error creating Lakhpati:", error);
       alert(
         error.response?.data?.message ||
-          "Failed to create Lakhpati Yojana. Please try again."
+        "Failed to create Lakhpati Yojana. Please try again."
       );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const installOptions = formData.tenure ? TENURE_INSTALL_MAP[formData.tenure] ?? [] : [];
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -115,110 +127,81 @@ export default function CreateLakhpatiSchem() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Tenure */}
         <div>
-  <label
-    htmlFor="tenure"
-    className="block text-sm font-medium text-gray-700 mb-2"
-  >
-    Tenure *
-  </label>
-  <select
-    id="tenure"
-    name="tenure"
-    value={formData.tenure}
-    onChange={handleChange}
-    className={`w-full px-4 py-2 border rounded-lg ${
-      errors.tenure ? "border-red-500" : "border-gray-300"
-    }`}
-  >
-    <option value="">-- Select Tenure --</option>
-    <option value="2">2 Years</option>
-    <option value="3">3 Years</option>
-    <option value="4">4 Years</option>
-    <option value="5">5 Years</option>
-  </select>
-  {errors.tenure && (
-    <p className="mt-1 text-sm text-red-600">{errors.tenure}</p>
-  )}
-</div>
-
-
-        {/* Tenure Type */}
-        <div>
           <label
-            htmlFor="tenureType"
+            htmlFor="tenure"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Tenure Type *
+            Tenure *
           </label>
           <select
-            id="tenureType"
-            name="tenureType"
-            value={formData.tenureType}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            id="tenure"
+            name="tenure"
+            value={formData.tenure}
+            onChange={handleTenureChange}
+            className={`w-full px-4 py-2 border rounded-lg ${errors.tenure ? "border-red-500" : "border-gray-300"
+              }`}
           >
-            {/* <option value="month">Months</option> */}
-            <option value="year">Years</option>
-            {/* <option value="week">Weeks</option> */}
+            <option value="">-- Select Tenure --</option>
+            <option value="2">2 Years</option>
+            <option value="3">3 Years</option>
+            <option value="4">4 Years</option>
+            <option value="5">5 Years</option>
           </select>
+          {errors.tenure && (
+            <p className="mt-1 text-sm text-red-600">{errors.tenure}</p>
+          )}
         </div>
 
-        {/* Installment Amount */}
-    <div>
-  <label
-    htmlFor="InstallAmount"
-    className="block text-sm font-medium text-gray-700 mb-2"
-  >
-    Installment Amount (₹) *
-  </label>
-  <select
-    id="InstallAmount"
-    name="InstallAmount"
-    value={formData.InstallAmount}
-    onChange={handleChange}
-    className={`w-full px-4 py-2 border rounded-lg ${
-      errors.InstallAmount ? "border-red-500" : "border-gray-300"
-    }`}
-  >
-    <option value="">-- Select Installment Amount --</option>
-    <option value="3740">₹3740</option>
-        <option value="2400">₹2400</option>
-     <option value="1650">₹1650</option>
-      <option value="1350">₹1350</option>
-    {/* <option value="10000">₹10000</option> */}
-  </select>
-  {errors.InstallAmount && (
-    <p className="mt-1 text-sm text-red-600">{errors.InstallAmount}</p>
-  )}
-</div>
+        {/* Tenure Type — hidden, always "year" */}
+        <input type="hidden" name="tenureType" value="year" />
 
+        {/* Installment Amount — options driven by tenure */}
+        <div>
+          <label
+            htmlFor="InstallAmount"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Installment Amount (₹) *
+          </label>
+          <select
+            id="InstallAmount"
+            name="InstallAmount"
+            value={formData.InstallAmount}
+            onChange={handleInstallChange}
+            disabled={!formData.tenure}
+            className={`w-full px-4 py-2 border rounded-lg bg-white ${errors.InstallAmount ? "border-red-500" : "border-gray-300"
+              } ${!formData.tenure ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {installOptions.length === 0 && (
+              <option value="">-- Select Tenure First --</option>
+            )}
+            {installOptions.map((amt) => (
+              <option key={amt} value={String(amt)}>
+                ₹{amt.toLocaleString("en-IN")}
+              </option>
+            ))}
+          </select>
+          {errors.InstallAmount && (
+            <p className="mt-1 text-sm text-red-600">{errors.InstallAmount}</p>
+          )}
+        </div>
 
-        {/* Maturity Amount */}
+        {/* Maturity Amount — read-only, fixed at ₹1,00,000 */}
         <div>
           <label
             htmlFor="maturityAmount"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Maturity Amount (₹) *
+            Maturity Amount (₹)
           </label>
-          <input
-            type="number"
-            id="maturityAmount"
-            name="maturityAmount"
-            value={formData.maturityAmount}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg ${
-              errors.maturityAmount
-                ? "border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder="Enter maturity amount"
-          />
-          {errors.maturityAmount && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.maturityAmount}
-            </p>
-          )}
+          <div className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-700 font-medium select-none">
+            ₹{MATURITY_AMOUNT.toLocaleString("en-IN")}
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            Fixed maturity amount — cannot be changed.
+          </p>
+          {/* Hidden input so value is included in formData */}
+          <input type="hidden" name="maturityAmount" value={MATURITY_AMOUNT} />
         </div>
 
         {/* Submit */}
@@ -226,11 +209,10 @@ export default function CreateLakhpatiSchem() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
+            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
           >
             {isSubmitting ? "Creating..." : "Create Lakhpati Yojana"}
           </button>
@@ -252,8 +234,7 @@ export default function CreateLakhpatiSchem() {
           <div>
             <span className="font-medium text-gray-600">Tenure:</span>
             <span className="ml-2">
-              {formData.tenure || "-"}{" "}
-              {formData.tenureType}
+              {formData.tenure || "-"} {formData.tenureType}
             </span>
           </div>
           <div>
@@ -265,21 +246,14 @@ export default function CreateLakhpatiSchem() {
             <span className="ml-2">
               ₹
               {formData.InstallAmount
-                ? parseInt(formData.InstallAmount).toLocaleString(
-                    "en-IN"
-                  )
+                ? parseInt(formData.InstallAmount).toLocaleString("en-IN")
                 : "-"}
             </span>
           </div>
           <div>
             <span className="font-medium text-gray-600">Maturity:</span>
             <span className="ml-2">
-              ₹
-              {formData.maturityAmount
-                ? parseInt(
-                    formData.maturityAmount
-                  ).toLocaleString("en-IN")
-                : "-"}
+              ₹{MATURITY_AMOUNT.toLocaleString("en-IN")}
             </span>
           </div>
         </div>

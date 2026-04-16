@@ -7,7 +7,7 @@ export default function Payments() {
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -15,7 +15,6 @@ export default function Payments() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Enhanced filter states
   const [selectedAgent, setSelectedAgent] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedAreaManager, setSelectedAreaManager] = useState("");
@@ -25,14 +24,13 @@ export default function Payments() {
   const [selectedSchemeType, setSelectedSchemeType] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [dateFilter, setDateFilter] = useState(""); // "today" | "yesterday" | ""
+  const [dateFilter, setDateFilter] = useState("");
 
   const manager = JSON.parse(sessionStorage.getItem("user"));
   const [agents, setAgents] = useState([]);
   const [areaManagers, setAreaManagers] = useState([]);
   const [customers, setCustomers] = useState([]);
 
-  // Search states for dropdowns
   const [agentSearch, setAgentSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [areaManagerSearch, setAreaManagerSearch] = useState("");
@@ -40,22 +38,18 @@ export default function Payments() {
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
   const [areaManagerDropdownOpen, setAreaManagerDropdownOpen] = useState(false);
 
-  // Refs for dropdown containers
   const agentDropdownRef = useRef(null);
   const customerDropdownRef = useRef(null);
   const areaManagerDropdownRef = useRef(null);
 
-  // Predefined filter options
   const statusOptions = ["pending", "approved", "rejected"];
   const transactionTypeOptions = ["deposit", "withdrawal", "emi", "maturityPayout", "penality"];
   const modeOptions = ["cash", "bankTransfer", "upi", "cheque", "card"];
- const schemeTypeOptions = ["FD", "RD", "LOAN", "PIGMY","SAVING_ACCOUNT","Lakhpati","MIP"];
+  const schemeTypeOptions = ["FD", "RD", "LOAN", "PIGMY", "SAVING_ACCOUNT", "Lakhpati", "MIP"];
 
-
-  const managerId = JSON.parse(sessionStorage.getItem("user"))._id
+  const managerId = JSON.parse(sessionStorage.getItem("user"))._id;
   const token = sessionStorage.getItem("token");
 
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
@@ -66,13 +60,9 @@ export default function Payments() {
 
   const fetchAreaManagers = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}&all=true`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}&all=true`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setAreaManagers(res.data.data || []);
     } catch (err) { console.error(err); }
@@ -80,31 +70,19 @@ export default function Payments() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/customer?managerId=${managerId}&all=true`,
-
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/customer?managerId=${managerId}&all=true`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setCustomers(res.data.data || []);
     } catch (err) { console.error(err); }
   };
 
-  // Fetch transactions with enhanced filters
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = {
-        search: debouncedSearch,
-        page,
-        limit,
-        managerId: manager._id,
-      };
-
-      // Add all filter parameters
+      const params = { search: debouncedSearch, page, limit, managerId: manager._id };
       if (selectedAgent) params.agentId = selectedAgent;
       if (selectedCustomer) params.customerId = selectedCustomer;
       if (selectedAreaManager) params.areaManagerId = selectedAreaManager;
@@ -114,15 +92,11 @@ export default function Payments() {
       if (selectedSchemeType) params.schemeType = selectedSchemeType;
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
-      if (dateFilter) params.filter = dateFilter; // pass today/yesterday filter
+      if (dateFilter) params.filter = dateFilter;
 
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/transactionSchemes/transactions`,
-        {
-          params, headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { params, headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data) {
@@ -138,33 +112,16 @@ export default function Payments() {
       setLoading(false);
     }
   }, [
-    debouncedSearch,
-    page,
-    limit,
-    selectedAgent,
-    selectedCustomer,
-    selectedAreaManager,
-    selectedStatus,
-    selectedTransactionType,
-    selectedMode,
-    selectedSchemeType,
-    fromDate,
-    toDate,
-    dateFilter,
-    manager._id
+    debouncedSearch, page, limit, selectedAgent, selectedCustomer,
+    selectedAreaManager, selectedStatus, selectedTransactionType,
+    selectedMode, selectedSchemeType, fromDate, toDate, dateFilter, manager._id,
   ]);
 
-  // Fetch agent list
   const fetchAgents = useCallback(async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/manager/agents/${manager._id}`,
-        {
-          params: { all: true },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { params: { all: true }, headers: { Authorization: `Bearer ${token}` } }
       );
       setAgents(response.data?.data || []);
     } catch {
@@ -178,586 +135,370 @@ export default function Payments() {
     fetchCustomers();
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (agentDropdownRef.current && !agentDropdownRef.current.contains(event.target)) {
+      if (agentDropdownRef.current && !agentDropdownRef.current.contains(event.target))
         setAgentDropdownOpen(false);
-      }
-      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target)) {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target))
         setCustomerDropdownOpen(false);
-      }
-      if (areaManagerDropdownRef.current && !areaManagerDropdownRef.current.contains(event.target)) {
+      if (areaManagerDropdownRef.current && !areaManagerDropdownRef.current.contains(event.target))
         setAreaManagerDropdownOpen(false);
-      }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset all filters function
   const resetAllFilters = () => {
-    setSelectedAgent("");
-    setSelectedCustomer("");
-    setSelectedAreaManager("");
-    setSelectedStatus("");
-    setSelectedTransactionType("");
-    setSelectedMode("");
-    setSelectedSchemeType("");
-    setFromDate("");
-    setToDate("");
-    setDateFilter("");
-    setSearch("");
-    setAgentSearch("");
-    setCustomerSearch("");
-    setAreaManagerSearch("");
+    setSelectedAgent(""); setSelectedCustomer(""); setSelectedAreaManager("");
+    setSelectedStatus(""); setSelectedTransactionType(""); setSelectedMode("");
+    setSelectedSchemeType(""); setFromDate(""); setToDate(""); setDateFilter("");
+    setSearch(""); setAgentSearch(""); setCustomerSearch(""); setAreaManagerSearch("");
     setPage(1);
   };
 
-  // Filter functions for searchable dropdowns
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(agentSearch.toLowerCase())
-  );
+  const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(agentSearch.toLowerCase()));
+  const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
+  const filteredAreaManagers = areaManagers.filter(m => m.name.toLowerCase().includes(areaManagerSearch.toLowerCase()));
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+  const getSelectedAgentName = () => agents.find(a => a._id === selectedAgent)?.name || "";
+  const getSelectedCustomerName = () => customers.find(c => c._id === selectedCustomer)?.name || "";
+  const getSelectedAreaManagerName = () => areaManagers.find(m => m._id === selectedAreaManager)?.name || "";
 
-  const filteredAreaManagers = areaManagers.filter(manager =>
-    manager.name.toLowerCase().includes(areaManagerSearch.toLowerCase())
-  );
-
-  // Get selected names for display
-  const getSelectedAgentName = () => {
-    const agent = agents.find(a => a._id === selectedAgent);
-    return agent ? agent.name : "";
-  };
-
-  const getSelectedCustomerName = () => {
-    const customer = customers.find(c => c._id === selectedCustomer);
-    return customer ? customer.name : "";
-  };
-
-  const getSelectedAreaManagerName = () => {
-    const manager = areaManagers.find(m => m._id === selectedAreaManager);
-    return manager ? manager.name : "";
-  };
-
-  // Accept transaction API call and optimistic update
   const handleAccept = async (id, status) => {
+    if (!window.confirm(`Are you sure you want to ${status} this transaction?`)) return;
     try {
-      const confirm = window.confirm(`Are you sure you want to ${status} this transaction?`);
-      if (!confirm) return; // ❌ stop if user cancels
-
-      const body = { status, managerId: manager._id };
       await axios.post(
         `${import.meta.env.VITE_API_URL}/transactionSchemes/transaction/approvedReject/${id}`,
-        body, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+        { status, managerId: manager._id },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setData((prev) =>
-        prev.map((trx) =>
-          trx._id === id ? { ...trx, status } : trx
-        )
-      );
-    } catch (err) {
-      alert("Failed to accept transaction");
+      setData(prev => prev.map(trx => trx._id === id ? { ...trx, status } : trx));
+    } catch {
+      alert("Failed to update transaction");
     }
   };
 
-  // Status color helper
-  const statusColorClass = (status) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "text-green-600 font-semibold";
-      case "rejected":
-        return "text-red-600 font-semibold";
-      case "pending":
-        return "text-yellow-600 font-semibold";
-      default:
-        return "";
-    }
+  const statusBadge = (status) => {
+    const map = {
+      approved: "bg-green-100 text-green-800",
+      rejected: "bg-red-100 text-red-800",
+      pending: "bg-yellow-100 text-yellow-800",
+    };
+    return (
+      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium capitalize ${map[status?.toLowerCase()] || "bg-gray-100 text-gray-700"}`}>
+        {status}
+      </span>
+    );
   };
+
+  /* ── Reusable searchable dropdown ── */
+  const SearchableDropdown = ({ dropdownRef, open, setOpen, label, selected, items, search, setSearch, onSelect, onClear }) => (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        className="w-full flex justify-between items-center border border-gray-300 rounded-md px-3 py-2 bg-white text-sm h-9 focus:outline-none focus:ring-2 focus:ring-orange-400"
+        onClick={() => setOpen(!open)}
+      >
+        <span className={selected ? "text-gray-900" : "text-gray-400"}>
+          {selected || label}
+        </span>
+        <FaChevronDown className={`text-gray-400 text-xs transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto">
+          <div className="p-2 border-b border-gray-100">
+            <input
+              type="text"
+              placeholder={`Search...`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:border-orange-400"
+            />
+          </div>
+          <div
+            className="flex justify-between items-center px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+            onClick={() => { onClear(); setOpen(false); setSearch(""); setPage(1); }}
+          >
+            <span className="text-gray-500">{label}</span>
+            {!selected && <span className="text-orange-500 text-xs">✓</span>}
+          </div>
+          {items.map(item => (
+            <div
+              key={item._id}
+              className="flex justify-between items-center px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+              onClick={() => { onSelect(item._id); setOpen(false); setSearch(""); setPage(1); }}
+            >
+              <span>{item.name}</span>
+              {selected === item._id && <span className="text-orange-500 text-xs">✓</span>}
+            </div>
+          ))}
+          {items.length === 0 && search && (
+            <div className="px-3 py-2 text-gray-400 text-sm">No results found</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      {/* Header */}
-      <div className="flex gap-2 bg-gradient-to-br from-orange-500 via-red-500 to-red-600 p-4 rounded-md items-center mb-6">
-        <h2 className="text-2xl font-bold">Payments</h2>
+    <div className="max-w-7xl mx-auto p-4 space-y-4">
+
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500 via-red-500 to-red-600 px-5 py-4 rounded-lg">
+        <h2 className="text-xl font-semibold text-white tracking-wide">Payments</h2>
       </div>
 
-      {/* Enhanced Filters Section */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Filters</h3>
+      {/* ── Filters ── */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-4">
+
+        {/* Filter header */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-base font-semibold text-gray-800">Filters</h3>
           <button
             onClick={resetAllFilters}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            className="px-4 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md border border-gray-300 transition-colors"
           >
-            Clear All Filters
+            Clear all filters
           </button>
         </div>
 
-        {/* First Row - Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {/* Agent Filter - Searchable */}
-          <div className="relative" ref={agentDropdownRef}>
-            <div
-              className="border border-gray-400 rounded px-3 py-2 w-full cursor-pointer flex justify-between items-center bg-white"
-              onClick={() => setAgentDropdownOpen(!agentDropdownOpen)}
-            >
-              <span className={selectedAgent ? "text-black" : "text-gray-500"}>
-                {selectedAgent ? getSelectedAgentName() : "All Agents"}
-              </span>
-              <FaChevronDown className={`transition-transform ${agentDropdownOpen ? 'rotate-180' : ''}`} />
-            </div>
-            {agentDropdownOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
-                <div className="p-2 border-b">
-                  <input
-                    type="text"
-                    placeholder="Search agents..."
-                    value={agentSearch}
-                    onChange={(e) => setAgentSearch(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                <div
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                  onClick={() => {
-                    setSelectedAgent("");
-                    setAgentDropdownOpen(false);
-                    setAgentSearch("");
-                    setPage(1);
-                  }}
-                >
-                  <span>All Agents</span>
-                  {!selectedAgent && <span className="text-blue-500">✓</span>}
-                </div>
-                {filteredAgents.map((agent) => (
-                  <div
-                    key={agent._id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                    onClick={() => {
-                      setSelectedAgent(agent._id);
-                      setAgentDropdownOpen(false);
-                      setAgentSearch("");
-                      setPage(1);
-                    }}
-                  >
-                    <span>{agent.name}</span>
-                    {selectedAgent === agent._id && <span className="text-blue-500">✓</span>}
-                  </div>
-                ))}
-                {filteredAgents.length === 0 && agentSearch && (
-                  <div className="px-3 py-2 text-gray-500">No agents found</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Customer Filter - Searchable */}
-          <div className="relative" ref={customerDropdownRef}>
-            <div
-              className="border border-gray-400 rounded px-3 py-2 w-full cursor-pointer flex justify-between items-center bg-white"
-              onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)}
-            >
-              <span className={selectedCustomer ? "text-black" : "text-gray-500"}>
-                {selectedCustomer ? getSelectedCustomerName() : "All Customers"}
-              </span>
-              <FaChevronDown className={`transition-transform ${customerDropdownOpen ? 'rotate-180' : ''}`} />
-            </div>
-            {customerDropdownOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
-                <div className="p-2 border-b">
-                  <input
-                    type="text"
-                    placeholder="Search customers..."
-                    value={customerSearch}
-                    onChange={(e) => setCustomerSearch(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                <div
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                  onClick={() => {
-                    setSelectedCustomer("");
-                    setCustomerDropdownOpen(false);
-                    setCustomerSearch("");
-                    setPage(1);
-                  }}
-                >
-                  <span>All Customers</span>
-                  {!selectedCustomer && <span className="text-blue-500">✓</span>}
-                </div>
-                {filteredCustomers.map((customer) => (
-                  <div
-                    key={customer._id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                    onClick={() => {
-                      setSelectedCustomer(customer._id);
-                      setCustomerDropdownOpen(false);
-                      setCustomerSearch("");
-                      setPage(1);
-                    }}
-                  >
-                    <span>{customer.name}</span>
-                    {selectedCustomer === customer._id && <span className="text-blue-500">✓</span>}
-                  </div>
-                ))}
-                {filteredCustomers.length === 0 && customerSearch && (
-                  <div className="px-3 py-2 text-gray-500">No customers found</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Area Manager Filter - Searchable */}
-          <div className="relative" ref={areaManagerDropdownRef}>
-            <div
-              className="border border-gray-400 rounded px-3 py-2 w-full cursor-pointer flex justify-between items-center bg-white"
-              onClick={() => setAreaManagerDropdownOpen(!areaManagerDropdownOpen)}
-            >
-              <span className={selectedAreaManager ? "text-black" : "text-gray-500"}>
-                {selectedAreaManager ? getSelectedAreaManagerName() : "All Area Managers"}
-              </span>
-              <FaChevronDown className={`transition-transform ${areaManagerDropdownOpen ? 'rotate-180' : ''}`} />
-            </div>
-            {areaManagerDropdownOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
-                <div className="p-2 border-b">
-                  <input
-                    type="text"
-                    placeholder="Search area managers..."
-                    value={areaManagerSearch}
-                    onChange={(e) => setAreaManagerSearch(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                <div
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                  onClick={() => {
-                    setSelectedAreaManager("");
-                    setAreaManagerDropdownOpen(false);
-                    setAreaManagerSearch("");
-                    setPage(1);
-                  }}
-                >
-                  <span>All Area Managers</span>
-                  {!selectedAreaManager && <span className="text-blue-500">✓</span>}
-                </div>
-                {filteredAreaManagers.map((manager) => (
-                  <div
-                    key={manager._id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                    onClick={() => {
-                      setSelectedAreaManager(manager._id);
-                      setAreaManagerDropdownOpen(false);
-                      setAreaManagerSearch("");
-                      setPage(1);
-                    }}
-                  >
-                    <span>{manager.name}</span>
-                    {selectedAreaManager === manager._id && <span className="text-blue-500">✓</span>}
-                  </div>
-                ))}
-                {filteredAreaManagers.length === 0 && areaManagerSearch && (
-                  <div className="px-3 py-2 text-gray-500">No area managers found</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Status Filter */}
+        {/* Row 1 — Agent / Customer / Area Manager / Status */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <SearchableDropdown
+            dropdownRef={agentDropdownRef}
+            open={agentDropdownOpen}
+            setOpen={setAgentDropdownOpen}
+            label="All Agents"
+            selected={selectedAgent ? getSelectedAgentName() : ""}
+            items={filteredAgents}
+            search={agentSearch}
+            setSearch={setAgentSearch}
+            onSelect={setSelectedAgent}
+            onClear={() => setSelectedAgent("")}
+          />
+          <SearchableDropdown
+            dropdownRef={customerDropdownRef}
+            open={customerDropdownOpen}
+            setOpen={setCustomerDropdownOpen}
+            label="All Customers"
+            selected={selectedCustomer ? getSelectedCustomerName() : ""}
+            items={filteredCustomers}
+            search={customerSearch}
+            setSearch={setCustomerSearch}
+            onSelect={setSelectedCustomer}
+            onClear={() => setSelectedCustomer("")}
+          />
+          <SearchableDropdown
+            dropdownRef={areaManagerDropdownRef}
+            open={areaManagerDropdownOpen}
+            setOpen={setAreaManagerDropdownOpen}
+            label="All Area Managers"
+            selected={selectedAreaManager ? getSelectedAreaManagerName() : ""}
+            items={filteredAreaManagers}
+            search={areaManagerSearch}
+            setSearch={setAreaManagerSearch}
+            onSelect={setSelectedAreaManager}
+            onClear={() => setSelectedAreaManager("")}
+          />
           <select
-            className="border border-gray-400 rounded px-3 py-2 w-full"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
             value={selectedStatus}
-            onChange={(e) => {
-              setSelectedStatus(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Filter by status"
+            onChange={e => { setSelectedStatus(e.target.value); setPage(1); }}
           >
             <option value="">All Status</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
+            {statusOptions.map(s => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
             ))}
           </select>
         </div>
 
-        {/* Second Row - More Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {/* Transaction Type Filter */}
+        {/* Row 2 — Transaction Type / Mode / Scheme / Search */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <select
-            className="border border-gray-400 rounded px-3 py-2 w-full"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
             value={selectedTransactionType}
-            onChange={(e) => {
-              setSelectedTransactionType(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Filter by transaction type"
+            onChange={e => { setSelectedTransactionType(e.target.value); setPage(1); }}
           >
             <option value="">All Transaction Types</option>
-            {transactionTypeOptions.map((type) => (
-              <option key={type} value={type}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </option>
+            {transactionTypeOptions.map(t => (
+              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
             ))}
           </select>
-
-          {/* Mode Filter */}
           <select
-            className="border border-gray-400 rounded px-3 py-2 w-full"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
             value={selectedMode}
-            onChange={(e) => {
-              setSelectedMode(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Filter by mode"
+            onChange={e => { setSelectedMode(e.target.value); setPage(1); }}
           >
             <option value="">All Modes</option>
-            {modeOptions.map((mode) => (
-              <option key={mode} value={mode}>
-                {mode.replace('_', ' ').charAt(0).toUpperCase() + mode.replace('_', ' ').slice(1)}
-              </option>
+            {modeOptions.map(m => (
+              <option key={m} value={m}>{m.replace("_", " ").charAt(0).toUpperCase() + m.replace("_", " ").slice(1)}</option>
             ))}
           </select>
-
-          {/* Scheme Type Filter */}
           <select
-            className="border border-gray-400 rounded px-3 py-2 w-full"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
             value={selectedSchemeType}
-            onChange={(e) => {
-              setSelectedSchemeType(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Filter by scheme type"
+            onChange={e => { setSelectedSchemeType(e.target.value); setPage(1); }}
           >
             <option value="">All Scheme Types</option>
-            {schemeTypeOptions.map((scheme) => (
-              <option key={scheme} value={scheme}>
-                {scheme.charAt(0).toUpperCase() + scheme.slice(1)}
-              </option>
+            {schemeTypeOptions.map(s => (
+              <option key={s} value={s}>{s}</option>
             ))}
           </select>
-
-          {/* Search */}
           <input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search By Ledger Number"
-            className="border border-gray-400 rounded px-3 py-2 w-full"
-            aria-label="Search payments by ledger number"
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by ledger number"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
         </div>
 
-        {/* Third Row - Date Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          {/* From Date */}
-          <div className="flex flex-col">
-            <label htmlFor="fromDate" className="text-sm font-medium mb-1">From Date</label>
+        {/* Row 3 — From Date / To Date / Quick Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">From date</label>
             <input
-              id="fromDate"
               type="date"
               value={fromDate}
-              onChange={(e) => {
-                setFromDate(e.target.value);
-                setPage(1);
-                if (dateFilter) setDateFilter(""); // Clear quick date filter
-              }}
-              className="border border-gray-400 rounded px-3 py-2 w-full"
+              onChange={e => { setFromDate(e.target.value); setPage(1); if (dateFilter) setDateFilter(""); }}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
-
-          {/* To Date */}
-          <div className="flex flex-col">
-            <label htmlFor="toDate" className="text-sm font-medium mb-1">To Date</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">To date</label>
             <input
-              id="toDate"
               type="date"
               value={toDate}
-              onChange={(e) => {
-                setToDate(e.target.value);
-                setPage(1);
-                if (dateFilter) setDateFilter(""); // Clear quick date filter
-              }}
-              className="border border-gray-400 rounded px-3 py-2 w-full"
+              onChange={e => { setToDate(e.target.value); setPage(1); if (dateFilter) setDateFilter(""); }}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm h-9 focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
-
-          {/* Quick Date Filter Buttons */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Quick Date Filters</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setDateFilter("today");
-                  setFromDate("");
-                  setToDate("");
-                }}
-                className={`px-3 py-2 rounded font-semibold border text-xs ${dateFilter === "today"
-                    ? "bg-yellow-400 text-white border-yellow-400"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-yellow-50"
-                  }`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => {
-                  setDateFilter("yesterday");
-                  setFromDate("");
-                  setToDate("");
-                }}
-                className={`px-3 py-2 rounded font-semibold border text-xs ${dateFilter === "yesterday"
-                    ? "bg-yellow-400 text-white border-yellow-400"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-yellow-50"
-                  }`}
-              >
-                Yesterday
-              </button>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">Quick date filters</label>
+            <div className="flex gap-2 h-9 items-center">
+              {["today", "yesterday"].map(d => (
+                <button
+                  key={d}
+                  onClick={() => { setDateFilter(d); setFromDate(""); setToDate(""); }}
+                  className={`px-4 py-1.5 rounded-md border text-xs font-medium transition-colors ${dateFilter === d
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-orange-50 hover:border-orange-300"
+                    }`}
+                >
+                  {d.charAt(0).toUpperCase() + d.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded shadow-sm overflow-x-auto">
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="px-4 py-2 border">Sr.</th>
-              <th className="px-4 py-2 border">Date</th>
-              <th className="px-4 py-2 border">Account Type</th>
-              <th className="px-4 py-2 border">Ledger No</th>
-              <th className="px-4 py-2 border">Customer</th>
-              <th className="px-4 py-2 border">Amount</th>
-              <th className="px-4 py-2 border">Type</th>
-              <th className="px-4 py-2 border">Mode</th>
-              <th className="px-4 py-2 border">Action</th>
-              <th className="px-4 py-2 border">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="9" className="text-center py-10 text-gray-500">
-                  Loading data...
-                </td>
+      {/* ── Table ── */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left" >
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                {["Sr.", "Date", "Account Type", "Ledger No.", "Customer", "Amount", "Type", "Mode", "Action", "Status"].map(h => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan="9" className="text-center py-10 text-red-500">
-                  Error: {error.message}
-                </td>
-              </tr>
-            ) : data.length === 0 ? (
-              <tr>
-                <td colSpan="9" className="text-center py-10 text-gray-500">
-                  No transactions found.
-                </td>
-              </tr>
-            ) : (
-              data.map((trx, idx) => (
-                <tr
-                  key={trx._id}
-                  className="odd:bg-white even:bg-yellow-50 hover:bg-yellow-100 transition"
-                >
-                  <td className="px-4 py-2 border">
-                    {(page - 1) * limit + idx + 1}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    {new Date(trx.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2 border">{trx.schemeType}</td>
-                  <td className="px-4 py-2 border">{trx.accountNumber}</td>
-                  <td className="px-4 py-2 border">
-                    {trx.customerId?.name || "N/A"}
-                  </td>
-                  <td className="px-4 py-2 border">{trx.amount.toFixed(2)}</td>
-                  <td className="px-4 py-2 border capitalize">
-                    {trx.transactionType || "N/A"}
-                  </td>
-                  <td className="px-4 py-2 border capitalize">
-                    {trx.mode?.replace('_', ' ') || "N/A"}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    {trx.status === "pending" ? (
-                      <div className="flex gap-2">
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="10" className="text-center py-12 text-gray-400 text-sm">Loading data...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="10" className="text-center py-12 text-red-500 text-sm">Error: {error.message}</td>
+                </tr>
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="text-center py-12 text-gray-400 text-sm">No transactions found.</td>
+                </tr>
+              ) : (
+                data.map((trx, idx) => (
+                  <tr key={trx._id} className="hover:bg-orange-50 transition-colors">
+                    <td className="px-4 py-3 text-gray-500">{(page - 1) * limit + idx + 1}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{new Date(trx.date).toLocaleDateString("en-GB")}</td>
+                    <td className="px-4 py-3">{trx.schemeType}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{trx.accountNumber}</td>
+                    <td className="px-4 py-3">{trx.customerId?.name || "N/A"}</td>
+                    <td className="px-4 py-3 text-right font-medium">{trx.amount.toFixed(2)}</td>
+                    <td className="px-4 py-3 capitalize">{trx.transactionType || "N/A"}</td>
+                    <td className="px-4 py-3 capitalize">{trx.mode?.replace("_", " ") || "N/A"}</td>
+                    <td className="px-4 py-3">
+                      {trx.status === "pending" ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAccept(trx._id, "approved")}
+                            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleAccept(trx._id, "rejected")}
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        statusBadge(trx.status)
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {statusBadge(trx.status)}
                         <button
-                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-                          onClick={() => handleAccept(trx._id, "approved")}
+                          onClick={() => navigate(`/payments/view/${trx._id}`)}
+                          className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-800 transition-colors"
+                          title="View details"
                         >
-                          Accept
-                        </button>
-                        <button
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-red-400"
-                          onClick={() => handleAccept(trx._id, "rejected")}
-                        >
-                          Reject
+                          <FaEye size={15} />
                         </button>
                       </div>
-                    ) : (
-                      <span className={statusColorClass(trx.status)}>
-                        {trx.status}
-                      </span>
-                    )}
-                  </td>
-                  <td className={`px-4 py-2 border flex gap-3 items-center capitalize ${statusColorClass(trx.status)}`}>
-                    {trx.status}
-                    <button onClick={() => navigate(`/payments/view/${trx._id}`)}>
-                      <FaEye size={20} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
+      {/* ── Pagination ── */}
+      <div className="flex justify-between items-center py-1">
         <button
           disabled={page === 1 || loading}
-          onClick={() => setPage((p) => p - 1)}
-          className={`px-4 py-1 border rounded ${page === 1 || loading
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-100"
-            }`}
+          onClick={() => setPage(p => p - 1)}
+          className="px-4 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Prev
+          ← Prev
         </button>
-        <span>
-          Page {page} of {totalPages} ({totalItems} Payments)
+        <span className="text-sm text-gray-600">
+          Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+          &nbsp;·&nbsp; {totalItems} Payments
         </span>
         <button
           disabled={page === totalPages || loading}
-          onClick={() => setPage((p) => p + 1)}
-          className={`px-4 py-1 border rounded ${page === totalPages || loading
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-gray-100"
-            }`}
+          onClick={() => setPage(p => p + 1)}
+          className="px-4 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Next
+          Next →
         </button>
       </div>
+
     </div>
   );
 }

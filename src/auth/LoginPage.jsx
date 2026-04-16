@@ -85,7 +85,7 @@ function Login() {
               {/* User ID */}
               <div className="relative">
                 <label className="block text-gray-700 text-sm font-semibold mb-2">
-                  User ID
+                  Email
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -95,7 +95,7 @@ function Login() {
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter User ID"
+                    placeholder="Enter Email ID"
                     value={email}
                     required
                     onChange={(e) => setEmail(e.target.value)}
@@ -158,11 +158,10 @@ function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-3 font-bold rounded-xl transition-all duration-300 transform ${
-                  loading
+                className={`w-full py-3 font-bold rounded-xl transition-all duration-300 transform ${loading
                     ? "bg-gray-300 cursor-not-allowed text-gray-500"
                     : "bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                }`}
+                  }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">

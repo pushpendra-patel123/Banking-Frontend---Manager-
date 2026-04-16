@@ -9,8 +9,8 @@ export default function RDEmiPayModal({ rd, customerId }) {
     customerId: customerId || '',
     rdAccountNumber: rd?.rdAccountNumber || '',
     transactionType: 'emi',
-    amount: rd.rdInstallAmount||'',
-    mode: ''
+    amount: rd.rdInstallAmount || '',
+    mode: 'bankTransfer'
   });
   const [errors, setErrors] = useState({});
 
@@ -61,7 +61,7 @@ export default function RDEmiPayModal({ rd, customerId }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -75,16 +75,16 @@ const token = sessionStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/transactionSchemes/rdTransaction`,
         formData,
-         {
-           headers: {
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         }
-        
+
       );
 
       if (response.data.success) {
-        alert('RD EMI processed successfully!');
+        alert('RD EMI processed successfully! Approve the payment to complete the transaction');
         closeModal();
       } else {
         alert(response.data.message || 'Failed to process RD EMI.');
@@ -93,7 +93,7 @@ const token = sessionStorage.getItem("token");
       console.error('Error processing RD EMI:', error);
       alert(
         error.response?.data?.message ||
-          'Failed to process RD EMI. Please try again.'
+        'Failed to process RD EMI. Please try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -112,7 +112,7 @@ const token = sessionStorage.getItem("token");
       customerId: customerId || '',
       rdAccountNumber: rd?.rdAccountNumber || '',
       transactionType: 'emi',
-      amount: rd.rdInstallAmount||'',
+      amount: rd.rdInstallAmount || '',
       mode: ''
     });
     setErrors({});
@@ -168,9 +168,8 @@ const token = sessionStorage.getItem("token");
                   value={formData.rdAccountNumber}
                   disabled
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.rdAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${errors.rdAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., RD1758346216646"
                 />
                 {errors.rdAccountNumber && (
@@ -207,9 +206,8 @@ const token = sessionStorage.getItem("token");
                   name="amount"
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., 4000"
                   min="100"
                 />
@@ -224,7 +222,7 @@ const token = sessionStorage.getItem("token");
               </div>
 
               {/* Payment Mode */}
-              <div>
+              {/* <div>
                 <label
                   htmlFor="mode"
                   className="block text-sm font-medium text-gray-700 mb-2"
@@ -259,7 +257,7 @@ const token = sessionStorage.getItem("token");
                 {errors.mode && (
                   <p className="mt-1 text-sm text-red-600">{errors.mode}</p>
                 )}
-              </div>
+              </div> */}
             </form>
 
             {/* Transaction Summary */}
@@ -269,12 +267,12 @@ const token = sessionStorage.getItem("token");
                   Transaction Summary
                 </h4>
                 <div className="space-y-2 text-sm">
-                  {/* <div className="flex justify-between">
+                  <div className="flex justify-between">
                     <span className="text-green-700">Customer ID:</span>
                     <span className="font-medium text-green-800">
                       {formData.customerId || '-'}
                     </span>
-                  </div> */}
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-green-700">RD Account:</span>
                     <span className="font-medium text-green-800">
@@ -312,11 +310,10 @@ const token = sessionStorage.getItem("token");
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isSubmitting
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

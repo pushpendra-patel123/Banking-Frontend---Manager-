@@ -16,25 +16,25 @@ export default function AreaManager() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  
+
 
   const token = sessionStorage.getItem("token");
-const managerId =JSON.parse( sessionStorage.getItem("user"))._id
-//   // 🔽 Fetch Managers for dropdown
-//   const fetchManagersList = async () => {
-//     try {
-//       const res = await axios.get(`${import.meta.env.VITE_API_URL}manager?all=true`);
-//       setManagers(res.data?.data || []);
-//     } catch (err) {
-//       console.error("Error fetching managers:", err);
-//     }
-//   };
+  const managerId = JSON.parse(sessionStorage.getItem("user"))._id
+  //   // 🔽 Fetch Managers for dropdown
+  //   const fetchManagersList = async () => {
+  //     try {
+  //       const res = await axios.get(`${import.meta.env.VITE_API_URL}manager?all=true`);
+  //       setManagers(res.data?.data || []);
+  //     } catch (err) {
+  //       console.error("Error fetching managers:", err);
+  //     }
+  //   };
 
   // ✅ Fetch Area Managers with filters
   const fetchAreaManagers = async (query = "", pageNum = 1) => {
     try {
       let url = `${import.meta.env.VITE_API_URL}/areaManager?search=${query}&page=${pageNum}&limit=${limit}`;
-   url += `&managerId=${managerId}`;
+      url += `&managerId=${managerId}`;
 
       const response = await axios.get(url);
       setData(response.data);
@@ -46,7 +46,7 @@ const managerId =JSON.parse( sessionStorage.getItem("user"))._id
     }
   };
 
- 
+
 
   useEffect(() => {
     fetchAreaManagers(search, page);
@@ -100,7 +100,7 @@ const managerId =JSON.parse( sessionStorage.getItem("user"))._id
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Area Manager"
+            placeholder="Search Area Manager By Name"
             className="border border-gray-400 px-3 py-1 rounded w-64"
           />
         </form>

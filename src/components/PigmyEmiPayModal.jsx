@@ -10,7 +10,7 @@ export default function PigmyEmiPayModal({ pigmy, customerId }) {
     pigMyAccountNumber: pigmy?.pigMyAccountNumber || '',
     transactionType: 'pigmy',
     amount: pigmy?.pigmyDailyDeposit || '',
-    mode: ''
+    mode: 'bankTransfer'
   });
 
   const [errors, setErrors] = useState({});
@@ -30,7 +30,7 @@ export default function PigmyEmiPayModal({ pigmy, customerId }) {
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
-const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const validateForm = () => {
     const newErrors = {};
     if (!formData.pigMyAccountNumber) newErrors.pigMyAccountNumber = 'Pigmy Account Number is required';
@@ -49,14 +49,14 @@ const token = sessionStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/transactionSchemes/pigmyEmiTransaction`,
         formData,
-         {
-           headers: {
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
       if (response.data.success) {
-        alert('Pigmy EMI processed successfully!');
+        alert('Pigmy EMI processed successfully! Approve the Payment to complete the Transaction');
         closeModal();
       } else {
         alert(response.data.message || 'Failed to process Pigmy EMI.');
@@ -123,9 +123,8 @@ const token = sessionStorage.getItem("token");
                   value={formData.pigMyAccountNumber}
                   disabled
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg ${
-                    errors.pigMyAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg ${errors.pigMyAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., PGMY1758346416975"
                 />
                 {errors.pigMyAccountNumber && (
@@ -146,11 +145,10 @@ const token = sessionStorage.getItem("token");
                   type="number"
                   name="amount"
                   value={formData.amount}
-                  
+
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
                 {formData.amount && (
@@ -160,17 +158,16 @@ const token = sessionStorage.getItem("token");
                 )}
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode *</label>
                 <div className="grid grid-cols-2 gap-2">
                   {paymentModes.map((mode) => (
                     <label
                       key={mode.value}
-                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                        formData.mode === mode.value
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${formData.mode === mode.value
                           ? 'border-green-500 bg-green-50 text-green-700'
                           : 'border-gray-300 hover:border-green-300'
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -188,7 +185,7 @@ const token = sessionStorage.getItem("token");
                   ))}
                 </div>
                 {errors.mode && <p className="mt-1 text-sm text-red-600">{errors.mode}</p>}
-              </div>
+              </div> */}
             </form>
 
             {/* Summary */}
@@ -231,9 +228,8 @@ const token = sessionStorage.getItem("token");
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

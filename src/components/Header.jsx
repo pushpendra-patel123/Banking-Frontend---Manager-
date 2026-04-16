@@ -9,10 +9,10 @@ const Header = () => {
       <div className="flex justify-center items-center md:w-20 md:h-20 sm:w-12 sm:h-12 border-2 border-red-400 rounded-full bg-gray-100 cursor-pointer">
         <Link className="" to="/settings/profilepage"  >
           <img
-                  src="/LOGOIMAGE.png"
-                  alt="Logo"
-                  className="h-20 w-20 object-contain"
-                />
+            src="/LOGOIMAGE.png"
+            alt="Logo"
+            className="h-20 w-20 object-contain"
+          />
         </Link>
       </div>
       <div className="ml-45 flex-1 text-center md:text-left min-w-[200px]">
@@ -20,7 +20,7 @@ const Header = () => {
           MAA ANUSAYA URBAN
         </h1>
         <p className="text-xs sm:text-sm text-white-mt-1">
-          Credit Co-operative Socity Ltd. Gondiya
+          Credit Co-operative Society Ltd. Gondiya
         </p>
       </div>
       <div className="flex justify-center items-center w-10 h-10 sm:w-12 sm:h-12 border-2 border-red-400 rounded-full bg-gray-100 cursor-pointer">

@@ -2,8 +2,7 @@ import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 
 const EditAgent = () => {
   const navigate = useNavigate();
@@ -13,28 +12,48 @@ const EditAgent = () => {
   const [loading, setLoading] = useState(true);
   const [previewSignature, setPreviewSignature] = useState(null);
   const [newSignatureFile, setNewSignatureFile] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting }
+    control,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const token = sessionStorage.getItem("token");
-  const managerId = JSON.parse(sessionStorage.getItem("user"))._id
-  const [agent, setAgent] = useState({})
+  const managerId = JSON.parse(sessionStorage.getItem("user"))._id;
+  const [agent, setAgent] = useState({});
+
+  // Watch DOB to auto-calculate age
+  const nomineeDoB = watch("NomineeDetails.dob");
+
+  useEffect(() => {
+    if (nomineeDoB) {
+      const today = new Date();
+      const birth = new Date(nomineeDoB);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      if (age >= 0 && age <= 120) {
+        setValue("NomineeDetails.age", age, { shouldValidate: true });
+      }
+    }
+  }, [nomineeDoB, setValue]);
+
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/agent/${id}`,{
-                headers: {
-                    Authorization: `Bearer ${token}`
-
-                },
-            })
+      .get(`${import.meta.env.VITE_API_URL}/agent/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => {
         const customer = res.data.data || res.data;
-        setAgent(customer)
+        setAgent(customer);
         reset({
           name: customer.name || "",
           email: customer.email || "",
@@ -44,7 +63,6 @@ const EditAgent = () => {
           gender: customer.gender || "",
           AadharNo: customer.AadharNo || "",
           panCard: customer.panCard || "",
-          signature: customer.signature,
           NomineeDetails: {
             name: customer.NomineeDetails?.name || "",
             relation: customer.NomineeDetails?.relation || "",
@@ -56,9 +74,8 @@ const EditAgent = () => {
             mobile: customer.NomineeDetails?.mobile || "",
             AadharNo: customer.NomineeDetails?.AadharNo || "",
             panCard: customer.NomineeDetails?.panCard || "",
-            address: customer.NomineeDetails?.address || ""
-          }
-
+            address: customer.NomineeDetails?.address || "",
+          },
         });
         setPreviewSignature(customer.signature || null);
       })
@@ -71,23 +88,23 @@ const EditAgent = () => {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}`,{
-                headers: {
-                    Authorization: `Bearer ${token}`
-
-                },
-            })
+      .get(`${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}&all=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => setManagers(res.data.data || res.data))
       .catch((err) => console.error("Error fetching managers:", err));
   }, [token]);
 
   const onSubmit = async (data) => {
+    setSubmitError(null);
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (key === "NomineeDetails") {
         Object.entries(value).forEach(([nkey, nvalue]) => {
           formData.append(`NomineeDetails[${nkey}]`, nvalue);
         });
+      } else if (key === "password" && !value) {
+        // skip empty password — don't send it
       } else {
         formData.append(key, value);
       }
@@ -96,26 +113,39 @@ const EditAgent = () => {
     if (newSignatureFile) {
       formData.append("signature", newSignatureFile);
     }
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/agent/${id}`, formData,{
-                headers: {
-                    Authorization: `Bearer ${token}`
 
-                },
-            });
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/agent/${id}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert("Agent updated successfully ✅");
       navigate(-1);
     } catch (error) {
-      console.error("Update Error:", error.response?.data || error.message);
-      alert("Failed to update agent ❌");
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to update agent ❌";
+      setSubmitError(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500" />
+      </div>
+    );
+
+  const inputClass = (hasError) =>
+    `w-full p-3 border ${hasError
+      ? "border-red-400 bg-red-50"
+      : "border-gray-200 focus:border-yellow-400"
+    } rounded-lg bg-gray-50 outline-none duration-200`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-r p-4">
-      <div className="w-full mx-auto shadow-lg rounded-xl bg-white">
+    <div className="min-h-screen p-4 flex justify-center items-start">
+      <div className="w-full shadow-lg rounded-xl bg-white">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-6 py-4 rounded-t-xl bg-gradient-to-br from-orange-500 via-red-500 to-red-600">
           <div className="flex items-center gap-2">
@@ -125,195 +155,315 @@ const EditAgent = () => {
             >
               <FaArrowLeft />
             </button>
-            <h2 className="text-xl font-semibold">View/Edit Agent</h2>
+            <h2 className="text-xl font-semibold text-white">View / Edit Agent</h2>
           </div>
           <button
             type="submit"
             form="editAgentForm"
-            className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-6 py-2 rounded-lg"
+            className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-white font-semibold px-6 py-2 rounded-lg active:scale-95 transition-all"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Updating..." : "Update"}
           </button>
         </div>
 
+        {/* Backend error banner */}
+        {submitError && (
+          <div className="mx-8 mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm flex items-start gap-2">
+            <span className="mt-0.5">⚠️</span>
+            <span>{submitError}</span>
+          </div>
+        )}
+
         <form
           id="editAgentForm"
           onSubmit={handleSubmit(onSubmit)}
-          className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 w-full"
         >
-          {/* Left column */}
-          <div>
-            <label className="block font-semibold text-sm mb-1 text-gray-700">Agent Name</label>
-            <input {...register("name", { required: "Name required" })} placeholder="Agent Name"
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none" />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+          <div className="p-8 grid md:grid-cols-2 gap-6">
 
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Agent Email</label>
-            <input {...register("email", { required: "Email required" })} placeholder="Email"
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none" />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Contact</label>
-            <input {...register("contact", { required: "Contact required", pattern: { value: /^\d{10}$/, message: "10 digits" } })}
-              placeholder="Contact" className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none" />
-            {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact.message}</p>}
-
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Gender</label>
-            <select {...register("gender", { required: "Gender required" })} className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none">
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-            {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>}
-
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Address</label>
-            <input {...register("address", { required: "Address required" })}
-              placeholder="Address"
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none" />
-            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Area Manager</label>
-            <select {...register("areaManagerId", { required: "Manager required" })}
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none">
-              <option value="">Select  Manager</option>
-              {managers.map((manager) => (
-                <option key={manager._id} value={manager._id}>{manager.name}</option>
-              ))}
-            </select>
-            {errors.areaManagerId && <p className="text-red-500 text-xs mt-1">{errors.areaManagerId.message}</p>}
-
-
-
-          </div>
-          {/* Right column */}
-          <div>
-            <label className="block font-semibold text-sm mb-1 text-gray-700">Aadhaar No</label>
-            <input {...register("AadharNo", { required: "Aadhar required", pattern: { value: /^\d{12}$/, message: "Must be 12 digits" } })}
-              placeholder="Aadhaar No" className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none" />
-            {errors.AadharNo && <p className="text-red-500 text-xs mt-1">{errors.AadharNo.message}</p>}
-
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">PAN Card</label>
-            <input {...register("panCard", {
-              required: "PAN required",
-              pattern: { value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, message: "Invalid PAN" },
-                         onChange: (e) => {
-        e.target.value = e.target.value.toUpperCase();
-      }
-            })} placeholder="PAN Card"
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none uppercase" />
-            {errors.panCard && <p className="text-red-500 text-xs mt-1">{errors.panCard.message}</p>}
-
-            {/* Signature */}
-            <label className="block font-semibold text-sm mb-1 text-gray-700 mt-6">Signature (Re-upload to change)</label>
-            <input type="file" accept="image/*,application/pdf"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  setNewSignatureFile(file);
-                  setPreviewSignature(URL.createObjectURL(file));
-                }
-              }}
-              className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none"
-            />
-            <div className="mt-2">
-              {previewSignature ? (
-                previewSignature.endsWith(".pdf") ? (
-                  <embed
-                    src={previewSignature}
-                    type="application/pdf"
-                    className="h-32 border rounded"
-                  />
-                ) : (
-                  <img
-                    src={previewSignature}
-                    alt="Signature Preview"
-                    className="h-24 border rounded"
-                  />
-                )
-              ) : (
-                // show existing signature from DB if no new file selected
-                agent?.signature && (
-                  agent.signature.endsWith(".pdf") ? (
-                    <embed
-                      src={agent.signature}
-                      type="application/pdf"
-                      className="h-32 border rounded"
-                    />
-                  ) : (
-                    <img
-                      src={agent.signature}
-                      alt="Signature"
-                      className="h-24 border rounded"
-                    />
-                  )
-                )
-              )}
+            {/* Agent Name */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Agent Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                {...register("name", {
+                  required: "Name is required",
+                  minLength: { value: 2, message: "Name must be at least 2 characters" },
+                  maxLength: { value: 50, message: "Name cannot exceed 50 characters" },
+                  pattern: {
+                    value: /^[a-zA-Z]+(\s[a-zA-Z]+)*$/,
+                    message: "Name can only contain letters; no leading, trailing, or double spaces",
+                  },
+                })}
+                placeholder="Enter Agent Name"
+                className={inputClass(errors.name)}
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
 
-            <div className="mt-6">
+            {/* Email */}
+            <div>
               <label className="block font-semibold text-sm mb-1 text-gray-700">
-                New Password
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Please enter a valid email address",
+                  },
+                })}
+                placeholder="Enter Email Address"
+                className={inputClass(errors.email)}
+              />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            </div>
+
+            {/* Contact */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Contact Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                maxLength={10}
+                {...register("contact", {
+                  required: "Contact number is required",
+                  pattern: {
+                    value: /^[6-9]\d{9}$/,
+                    message: "Must be a valid 10-digit Indian mobile number starting with 6-9",
+                  },
+                })}
+                placeholder="Enter Contact Number"
+                className={inputClass(errors.contact)}
+              />
+              {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact.message}</p>}
+            </div>
+
+            {/* Aadhaar */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Aadhaar Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                maxLength={12}
+                {...register("AadharNo", {
+                  required: "Aadhaar number is required",
+                  minLength: { value: 12, message: "Aadhaar number must be exactly 12 digits" },
+                  maxLength: { value: 12, message: "Aadhaar number must be exactly 12 digits" },
+                  pattern: {
+                    value: /^[2-9]\d{11}$/,
+                    message: "Aadhaar must be 12 digits and cannot start with 0 or 1",
+                  },
+                })}
+                placeholder="Enter 12-digit Aadhaar Number"
+                className={inputClass(errors.AadharNo)}
+              />
+              {errors.AadharNo && <p className="text-red-500 text-xs mt-1">{errors.AadharNo.message}</p>}
+            </div>
+
+            {/* PAN */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                PAN Card <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                maxLength={10}
+                {...register("panCard", {
+                  required: "PAN Card is required",
+                  pattern: {
+                    value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+                    message: "PAN format: ABCDE1234F (5 letters, 4 digits, 1 letter)",
+                  },
+                  onChange: (e) => {
+                    e.target.value = e.target.value.toUpperCase();
+                  },
+                })}
+                placeholder="Enter PAN Card Number"
+                className={`${inputClass(errors.panCard)} uppercase`}
+              />
+              {errors.panCard && <p className="text-red-500 text-xs mt-1">{errors.panCard.message}</p>}
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register("gender", { required: "Gender selection is required" })}
+                className={inputClass(errors.gender)}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>}
+            </div>
+
+            {/* Address */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                {...register("address", {
+                  required: "Address is required",
+                  minLength: { value: 10, message: "Address must be at least 10 characters" },
+                  maxLength: { value: 200, message: "Address cannot exceed 200 characters" },
+                })}
+                placeholder="Enter Complete Address"
+                className={inputClass(errors.address)}
+              />
+              {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
+            </div>
+
+            {/* Area Manager */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Area Manager <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register("areaManagerId", { required: "Manager selection is required" })}
+                className={inputClass(errors.areaManagerId)}
+              >
+                <option value="">Select Manager</option>
+                {managers.map((mng) => (
+                  <option key={mng._id} value={mng._id}>
+                    {mng.name}
+                  </option>
+                ))}
+              </select>
+              {errors.areaManagerId && <p className="text-red-500 text-xs mt-1">{errors.areaManagerId.message}</p>}
+            </div>
+
+            {/* Signature */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                Signature{" "}
+                <span className="text-gray-400 font-normal text-xs">(re-upload to change)</span>
+              </label>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
+                  if (!allowedTypes.includes(file.type)) {
+                    alert("Only JPG, PNG, or PDF files are allowed");
+                    e.target.value = "";
+                    return;
+                  }
+                  if (file.size > 2 * 1024 * 1024) {
+                    alert("File size must be less than 2MB");
+                    e.target.value = "";
+                    return;
+                  }
+                  setNewSignatureFile(file);
+                  setPreviewSignature(URL.createObjectURL(file));
+                }}
+                className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 outline-none duration-200"
+              />
+              <div className="mt-2">
+                {previewSignature ? (
+                  previewSignature.startsWith("blob:") || !previewSignature.endsWith(".pdf") ? (
+                    <img src={previewSignature} alt="Signature Preview" className="h-24 border rounded" />
+                  ) : (
+                    <embed src={previewSignature} type="application/pdf" className="h-32 border rounded" />
+                  )
+                ) : agent?.signature ? (
+                  agent.signature.endsWith(".pdf") ? (
+                    <embed src={agent.signature} type="application/pdf" className="h-32 border rounded" />
+                  ) : (
+                    <img src={agent.signature} alt="Signature" className="h-24 border rounded" />
+                  )
+                ) : null}
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block font-semibold text-sm mb-1 text-gray-700">
+                New Password{" "}
+                <span className="text-gray-400 font-normal text-xs">(leave blank to keep current)</span>
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   {...register("password", {
-                    minLength: { value: 6, message: "Password must be at least 6 characters" }
+                    minLength: { value: 8, message: "Password must be at least 8 characters" },
+                    validate: (value) => {
+                      if (!value) return true; // optional on edit
+                      return (
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(value) ||
+                        "Must contain uppercase, lowercase, number and special character"
+                      );
+                    },
                   })}
                   placeholder="Enter new password"
-                  className={`w-full p-3 border ${errors.password ? "border-red-400" : "border-gray-200"} rounded-lg bg-gray-50 outline-none pr-10`}
+                  className={`${inputClass(errors.password)} pr-10`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+                  tabIndex={-1}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-              )}
-
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
           </div>
-          {/* Full width nominee details */}
-          <div className="md:col-span-2 border-t border-gray-200 mt-6 pt-4">
-            <h3 className="font-semibold mb-4 text-gray-700">Nominee Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Guarantor / Nominee Section */}
+          <div className="border-t border-gray-200 px-8 pb-8 pt-6">
+            <h3 className="text-lg font-semibold mb-6 text-gray-800">
+              Guarantor Details <span className="text-red-500">*</span>
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+
+              {/* Nominee Name */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Nominee Name
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   {...register("NomineeDetails.name", {
-                    required: "Nominee name required"
+                    required: "Name is required",
+                    minLength: { value: 2, message: "Name must be at least 2 characters" },
+                    pattern: {
+                      value: /^[a-zA-Z]+(\s[a-zA-Z]+)*$/,
+                      message: "Name can only contain letters; no leading, trailing, or double spaces",
+                    },
                   })}
-                  placeholder="Nominee Name"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.name
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  placeholder="Enter  Name"
+                  className={inputClass(errors?.NomineeDetails?.name)}
                 />
                 {errors?.NomineeDetails?.name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.name.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.name.message}</p>
                 )}
               </div>
 
-             <div>
+              {/* Relation */}
+              <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
                   Relation <span className="text-red-500">*</span>
                 </label>
                 <select
                   {...register("NomineeDetails.relation", { required: "Relation is required" })}
-                  className={`w-full p-3 border ${
-                    errors?.NomineeDetails?.relation ? "border-red-400" : "border-gray-200 focus:border-yellow-400"
-                  } rounded-lg bg-gray-50 outline-none duration-200`}
+                  className={inputClass(errors?.NomineeDetails?.relation)}
                 >
                   <option value="">Select Relation</option>
                   <option value="Spouse">Spouse</option>
@@ -330,125 +480,124 @@ const EditAgent = () => {
                 )}
               </div>
 
+              {/* Date of Birth — drives age */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  {...register("NomineeDetails.age", {
-                    required: "Age required"
-                  })}
-                  placeholder="Age"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.age
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
-                />
-                {errors?.NomineeDetails?.age && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.age.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Date of Birth
+                  Date of Birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
+                  max={new Date().toISOString().split("T")[0]}
                   {...register("NomineeDetails.dob", {
-                    required: "DOB required"
+                    required: "Date of birth is required",
+                    validate: {
+                      notFuture: (value) =>
+                        new Date(value) <= new Date() || "Date of birth cannot be in the future",
+                    },
                   })}
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.dob
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  className={inputClass(errors?.NomineeDetails?.dob)}
                 />
                 {errors?.NomineeDetails?.dob && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.dob.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.dob.message}</p>
                 )}
               </div>
 
+              {/* Age — auto-filled from DOB */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Nominee Email
+                  Age <span className="text-red-500">*</span>{" "}
+                  <span className="text-gray-400 font-normal text-xs">(auto-calculated from DOB)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  readOnly
+                  {...register("NomineeDetails.age", {
+                    required: "Age is required",
+                    min: { value: 1, message: "Age must be at least 1" },
+                    max: { value: 120, message: "Age cannot exceed 120" },
+                    valueAsNumber: true,
+                  })}
+                  placeholder="Auto-filled from DOB"
+                  className={`${inputClass(errors?.NomineeDetails?.age)} cursor-not-allowed bg-gray-100`}
+                />
+                {errors?.NomineeDetails?.age && (
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.age.message}</p>
+                )}
+              </div>
+
+              {/* Nominee Email */}
+              <div>
+                <label className="block font-semibold text-sm mb-1 text-gray-700">
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   {...register("NomineeDetails.email", {
-                    required: "Email required"
+                    required: "Nominee email is required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Please enter a valid email address",
+                    },
                   })}
-                  placeholder="Nominee Email"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.email
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  placeholder="Enter Email Address"
+                  className={inputClass(errors?.NomineeDetails?.email)}
                 />
                 {errors?.NomineeDetails?.email && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.email.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.email.message}</p>
                 )}
               </div>
 
+              {/* Mobile */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Mobile Number
+                  Mobile Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   maxLength={10}
                   {...register("NomineeDetails.mobile", {
-                    required: "Mobile number required",
+                    required: "Mobile number is required",
                     pattern: {
-                      value: /^\d{10}$/,
-                      message: "10-digit mobile required"
-                    }
+                      value: /^[6-9]\d{9}$/,
+                      message: "Must be a valid 10-digit Indian mobile number starting with 6-9",
+                    },
                   })}
-                  placeholder="Mobile"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.mobile
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  placeholder="Enter Mobile Number"
+                  className={inputClass(errors?.NomineeDetails?.mobile)}
                 />
                 {errors?.NomineeDetails?.mobile && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.mobile.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.mobile.message}</p>
                 )}
               </div>
 
+              {/* Nominee Aadhaar */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Aadhaar Number
+                  Aadhaar Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   maxLength={12}
                   {...register("NomineeDetails.AadharNo", {
-                    required: "Aadhaar required",
+                    required: "Nominee's Aadhaar number is required",
+                    minLength: { value: 12, message: "Aadhaar number must be exactly 12 digits" },
+                    maxLength: { value: 12, message: "Aadhaar number must be exactly 12 digits" },
                     pattern: {
-                      value: /^\d{12}$/,
-                      message: "Must be 12 digits"
-                    }
+                      value: /^[2-9]\d{11}$/,
+                      message: "Aadhaar must be 12 digits and cannot start with 0 or 1",
+                    },
                   })}
-                  placeholder="Nominee Aadhaar"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.AadharNo
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  placeholder="Enter Aadhaar Number"
+                  className={inputClass(errors?.NomineeDetails?.AadharNo)}
                 />
                 {errors?.NomineeDetails?.AadharNo && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.AadharNo.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.AadharNo.message}</p>
                 )}
               </div>
 
+              {/* Nominee PAN */}
               <div>
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
                   PAN Card
@@ -457,47 +606,39 @@ const EditAgent = () => {
                   type="text"
                   maxLength={10}
                   {...register("NomineeDetails.panCard", {
-                    // required: "PAN required",
                     pattern: {
                       value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-                      message: "Invalid PAN format"
+                      message: "PAN format: ABCDE1234F (5 letters, 4 digits, 1 letter)",
                     },
-                               onChange: (e) => {
-        e.target.value = e.target.value.toUpperCase();
-      }
+                    onChange: (e) => {
+                      e.target.value = e.target.value.toUpperCase();
+                    },
                   })}
-                  placeholder="Nominee PAN"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.panCard
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none uppercase`}
+                  placeholder="Enter PAN Card Number (optional)"
+                  className={`${inputClass(errors?.NomineeDetails?.panCard)} uppercase`}
                 />
                 {errors?.NomineeDetails?.panCard && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.panCard.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.panCard.message}</p>
                 )}
               </div>
 
+              {/* Nominee Address */}
               <div className="md:col-span-2">
                 <label className="block font-semibold text-sm mb-1 text-gray-700">
-                  Address
+                  Address <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  rows={3}
                   {...register("NomineeDetails.address", {
-                    required: "Address required"
+                    required: "Nominee address is required",
+                    minLength: { value: 10, message: "Address must be at least 10 characters" },
+                    maxLength: { value: 200, message: "Address cannot exceed 200 characters" },
                   })}
-                  placeholder="Nominee Address"
-                  className={`w-full p-3 border ${errors?.NomineeDetails?.address
-                    ? "border-red-400"
-                    : "border-gray-200"
-                    } rounded-lg bg-gray-50 outline-none`}
+                  placeholder="Enter Complete Address"
+                  className={`${inputClass(errors?.NomineeDetails?.address)} resize-none`}
                 />
                 {errors?.NomineeDetails?.address && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.NomineeDetails.address.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-1">{errors.NomineeDetails.address.message}</p>
                 )}
               </div>
             </div>

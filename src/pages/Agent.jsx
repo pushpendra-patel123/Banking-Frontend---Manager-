@@ -220,7 +220,7 @@ export default function Agent() {
             setPage(1);
             setSearch(e.target.value);
           }}
-          placeholder="Search agent (name/contact)"
+          placeholder="Search agent by Name & Mobile"
           className="border border-gray-400 px-3 py-1 rounded w-64"
         />
 
@@ -235,15 +235,14 @@ export default function Agent() {
                 setIsDropdownOpen(true);
               }}
               onFocus={() => setIsDropdownOpen(true)}
-              placeholder="Search Area Manager..."
+              placeholder="Search Area Manager By Name & Mobile"
               className="border border-gray-400 px-3 py-2 pr-8 rounded w-64 focus:outline-none focus:border-blue-500"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <FaChevronDown 
-                className={`text-gray-400 transition-transform duration-200 ${
-                  isDropdownOpen ? 'rotate-180' : ''
-                }`} 
-                size={12} 
+              <FaChevronDown
+                className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                size={12}
               />
             </div>
           </div>
@@ -258,16 +257,15 @@ export default function Agent() {
               >
                 <span className="font-medium">All Area Managers</span>
               </div>
-              
+
               {/* Area Manager Options */}
               {filteredAreaManagers.length > 0 ? (
                 filteredAreaManagers.map((manager) => (
                   <div
                     key={manager._id}
                     onClick={() => handleAreaManagerSelect(manager)}
-                    className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${
-                      selectedAreaManager?._id === manager._id ? 'bg-blue-100' : ''
-                    }`}
+                    className={`px-4 py-2 hover:bg-blue-50 cursor-pointer ${selectedAreaManager?._id === manager._id ? 'bg-blue-100' : ''
+                      }`}
                   >
                     <div className="font-medium">{manager.name}</div>
                     {manager.email && (

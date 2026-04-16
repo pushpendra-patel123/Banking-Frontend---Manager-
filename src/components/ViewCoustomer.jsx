@@ -93,7 +93,9 @@ function ViewCoustomer() {
               <div className="flex items-center mb-6">
                 <div className="bg-orange-100 p-1 rounded-full mr-4 w-20 h-20 flex items-center justify-center overflow-hidden">
                   <img
-                    src={customer?.picture}
+                    src={customer?.picture ||
+                      "./ProfileImage.png"
+                    }
                     alt="Profile"
                     className="w-full h-full object-cover rounded-full"
                   />
@@ -201,7 +203,7 @@ function ViewCoustomer() {
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <FaIdCard className="text-blue-500 mr-3" />
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-gray-600">Aadhar Number</span>
+                    <span className="text-sm font-medium text-gray-600">Aadhaar Number</span>
                     <p className="text-gray-800 font-semibold">
                       {customer?.AadharNo || "N/A"}
                     </p>
@@ -332,7 +334,7 @@ function ViewCoustomer() {
                   <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                     <FaIdCard className="text-green-500 mr-3" />
                     <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-600">Aadhar Number</span>
+                      <span className="text-sm font-medium text-gray-600">Aadhaar Number</span>
                       <p className="text-gray-800 font-semibold">
                         {customer.NomineeDetails.AadharNo || "N/A"}
                       </p>

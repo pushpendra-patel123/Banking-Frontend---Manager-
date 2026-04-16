@@ -25,6 +25,53 @@ export default function CreateMipForm() {
     }
   };
 
+  // Interest rate: allow typing like "12.22", block 3-digit integers like "666"
+  const handleInterestRateChange = (e) => {
+    const raw = e.target.value;
+
+    // Allow empty string (clearing the field)
+    if (raw === '' || raw === '.') {
+      setFormData(prev => ({ ...prev, interestRate: raw }));
+      setErrors(prev => ({ ...prev, interestRate: '' }));
+      return;
+    }
+
+    // Only allow digits and a single decimal point
+    if (!/^\d*\.?\d*$/.test(raw)) return;
+
+    const parts = raw.split('.');
+    const intPart = parts[0];
+    const decPart = parts[1];
+
+    // Block more than 2 digits before decimal (e.g. "666", "100")
+    if (intPart.length > 2) {
+      setErrors(prev => ({
+        ...prev,
+        interestRate: 'Interest rate cannot exceed 99.99%',
+      }));
+      return;
+    }
+
+    // Block more than 2 decimal places
+    if (decPart !== undefined && decPart.length > 2) return;
+
+    const numericValue = parseFloat(raw);
+
+    // Show error if value exceeds 99.99
+    if (!isNaN(numericValue) && numericValue > 99.99) {
+      setErrors(prev => ({
+        ...prev,
+        interestRate: 'Interest rate cannot exceed 99.99%',
+      }));
+      // Still update so user sees what they typed, but keep the error
+      setFormData(prev => ({ ...prev, interestRate: raw }));
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, interestRate: raw }));
+    setErrors(prev => ({ ...prev, interestRate: '' }));
+  };
+
   const MIN_DEPOSIT = import.meta.env.VITE_MINIMUM_MIP_AMOUNT || 50000;
 
   const validateForm = () => {
@@ -42,8 +89,8 @@ export default function CreateMipForm() {
 
     if (!formData.interestRate || formData.interestRate <= 0) {
       newErrors.interestRate = 'Interest rate must be greater than 0';
-    } else if (formData.interestRate > 15) {
-      newErrors.interestRate = 'Interest rate cannot exceed 15%';
+    } else if (Number(formData.interestRate) > 99.99) {
+      newErrors.interestRate = 'Interest rate cannot exceed 99.99%';
     }
 
     setErrors(newErrors);
@@ -62,7 +109,6 @@ export default function CreateMipForm() {
       const payload = {
         tenure: formData.tenure,
         tenureType: formData.tenureType,
-        // type: formData.type,
         depositAmount: formData.depositAmount,
         interestRate: formData.interestRate,
       };
@@ -143,20 +189,6 @@ export default function CreateMipForm() {
           </select>
         </div>
 
-        {/* Type */}
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            MIP Type *
-          </label>
-          <input
-            type="text"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div> */}
-
         {/* Deposit Amount */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -167,6 +199,11 @@ export default function CreateMipForm() {
             name="depositAmount"
             value={formData.depositAmount}
             onChange={handleChange}
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.depositAmount ? 'border-red-500' : 'border-gray-300'}`}
             placeholder="Enter deposit amount"
           />
@@ -179,14 +216,18 @@ export default function CreateMipForm() {
             Interest Rate (%) *
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             name="interestRate"
             value={formData.interestRate}
-            onChange={handleChange}
+            onChange={handleInterestRateChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.interestRate ? 'border-red-500' : 'border-gray-300'}`}
-            placeholder="Enter interest rate"
+            placeholder="e.g. 8.50"
           />
-          {errors.interestRate && <p className="mt-1 text-sm text-red-600">{errors.interestRate}</p>}
+          {errors.interestRate
+            ? <p className="mt-1 text-sm text-red-600">{errors.interestRate}</p>
+            : <p className="mt-1 text-xs text-gray-400">Max 99.99%, up to 2 decimal places (e.g. 12.22)</p>
+          }
         </div>
 
         {/* Submit Buttons */}

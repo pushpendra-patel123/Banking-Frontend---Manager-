@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function CreatePigmyForm() {
-  const { customerId,savingAc } = useParams();
+  const { customerId, savingAc } = useParams();
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
   const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ export default function CreatePigmyForm() {
     pigmyDailyDeposit: "",
     pigMyTenure: "",
     pigMyTenureType: "month",
+    interestRate: "6", // backend uses interestRate
   });
 
   const [errors, setErrors] = useState({});
@@ -28,6 +29,45 @@ export default function CreatePigmyForm() {
     }
   };
 
+  const handleInterestRateChange = (e) => {
+    const raw = e.target.value;
+
+    if (raw === "" || raw === ".") {
+      setFormData((prev) => ({ ...prev, interestRate: raw }));
+      setErrors((prev) => ({ ...prev, interestRate: "" }));
+      return;
+    }
+
+    if (!/^\d*\.?\d*$/.test(raw)) return;
+
+    const parts = raw.split(".");
+    const intPart = parts[0];
+    const decPart = parts[1];
+
+    if (intPart.length > 2) {
+      setErrors((prev) => ({
+        ...prev,
+        interestRate: "Interest rate cannot exceed 99.99%",
+      }));
+      return;
+    }
+
+    if (decPart !== undefined && decPart.length > 2) return;
+
+    const numericValue = parseFloat(raw);
+    if (!isNaN(numericValue) && numericValue > 99.99) {
+      setErrors((prev) => ({
+        ...prev,
+        interestRate: "Interest rate cannot exceed 99.99%",
+      }));
+      setFormData((prev) => ({ ...prev, interestRate: raw }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, interestRate: raw }));
+    setErrors((prev) => ({ ...prev, interestRate: "" }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.pigmyDailyDeposit || formData.pigmyDailyDeposit <= 0) {
@@ -35,6 +75,11 @@ export default function CreatePigmyForm() {
     }
     if (!formData.pigMyTenure || formData.pigMyTenure <= 0) {
       newErrors.pigMyTenure = "Tenure must be greater than 0";
+    }
+    if (!formData.interestRate || formData.interestRate <= 0) {
+      newErrors.interestRate = "Interest rate must be greater than 0";
+    } else if (Number(formData.interestRate) > 99.99) {
+      newErrors.interestRate = "Interest rate cannot exceed 99.99%";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -117,6 +162,11 @@ export default function CreatePigmyForm() {
             name="pigmyDailyDeposit"
             value={formData.pigmyDailyDeposit}
             onChange={handleChange}
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             className={`w-full px-4 py-2 border rounded-lg ${errors.pigmyDailyDeposit ? "border-red-500" : "border-gray-300"
               }`}
             placeholder="Enter daily deposit"
@@ -164,14 +214,38 @@ export default function CreatePigmyForm() {
           </select>
         </div>
 
+        {/* Interest Rate */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Interest Rate (%) *
+          </label>
+          <input
+            type="text"
+            inputMode="decimal"
+            name="interestRate"
+            value={formData.interestRate}
+            onChange={handleInterestRateChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.interestRate ? "border-red-500" : "border-gray-300"
+              }`}
+            placeholder="e.g. 8.50"
+          />
+          {errors.interestRate ? (
+            <p className="mt-1 text-sm text-red-600">{errors.interestRate}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-400">
+              Max 99.99%, up to 2 decimal places (e.g. 12.25)
+            </p>
+          )}
+        </div>
+
         {/* Submit */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
             disabled={isSubmitting}
             className={`flex-1 px-6 py-3 rounded-lg text-white font-medium transition-colors ${isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
               }`}
           >
             {isSubmitting ? "Creating..." : "Create Pigmy"}
@@ -213,6 +287,10 @@ export default function CreatePigmyForm() {
             <span>
               {formData.pigMyTenure} {formData.pigMyTenureType}
             </span>
+          </div>
+          <div>
+            <span className="font-medium">Interest Rate:</span>{" "}
+            <span>{formData.interestRate}%</span>
           </div>
         </div>
       </div>

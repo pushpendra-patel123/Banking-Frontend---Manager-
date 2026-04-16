@@ -12,6 +12,7 @@ import PigmyMaturityModal from "../modal/PigmyMaturityModal";
 import LakhpatiEmiPayModal from "../modal/LakhpatiEmiPayModal";
 import LakhpatiMaturityModal from "../modal/LakhpatiMaturityModal";
 import MipMaturityModal from "../modal/MipMaturityModal";
+import MipEmiPayModal from "../modal/MipEmiPayModal";
 // import { apiCustomerUrl } from "../../api/apiRoutes";
 
 function CustomerDetails() {
@@ -219,13 +220,21 @@ function CustomerDetails() {
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <FaIdCard className="text-blue-500 mr-3" />
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-gray-600">Aadhar Number</span>
+                    <span className="text-sm font-medium text-gray-600">Aadhaar Number</span>
                     <p className="text-gray-800 font-semibold">
                       {customer?.AadharNo || "N/A"}
                     </p>
                   </div>
                 </div>
-
+                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <FaIdCard className="text-blue-500 mr-3" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-gray-600">Customer Id</span>
+                    <p className="text-gray-800 font-semibold">
+                      {customer.CustomerId}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <FaCreditCard className="text-blue-500 mr-3" />
                   <div className="flex-1">
@@ -264,7 +273,15 @@ function CustomerDetails() {
                   <div className="flex-1">
                     <span className="text-sm font-medium text-gray-600">Opening Date</span>
                     <p className="text-gray-800 font-semibold">
-                      {customer?.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-IN') : "N/A"}
+                      {
+                        customer?.createdAt
+                          ? new Date(customer.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                          : "N/A"
+                      }
                     </p>
                   </div>
                 </div>
@@ -350,7 +367,7 @@ function CustomerDetails() {
                   <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                     <FaIdCard className="text-green-500 mr-3" />
                     <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-600">Aadhar Number</span>
+                      <span className="text-sm font-medium text-gray-600">Aadhaar Number</span>
                       <p className="text-gray-800 font-semibold">
                         {customer.NomineeDetails.AadharNo || "N/A"}
                       </p>
@@ -438,13 +455,15 @@ function CustomerDetails() {
                           <div>
                             <span className="text-sm font-medium text-gray-600">Principal Amount</span>
                             <p className="text-xl font-bold text-green-600">
-                              ₹{fd.fdPrincipalAmount ? fd.fdPrincipalAmount : "0"}
+                              ₹{fd.fdPrincipalAmount ? Number(fd.fdPrincipalAmount).toLocaleString("en-IN") : "0"}
                             </p>
                           </div>
                           <div>
                             <span className="text-sm font-medium text-gray-600">Deposit Amount</span>
                             <p className="text-lg font-semibold text-gray-800">
-                              ₹{fd.fdDepositAmount ? fd.fdDepositAmount : "0"}
+                              ₹{fd?.fdDepositAmount
+                                ? Number(fd.fdDepositAmount).toLocaleString("en-IN")
+                                : "0"}
                             </p>
                           </div>
                         </div>
@@ -494,7 +513,7 @@ function CustomerDetails() {
                           <div>
                             <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
                             <p className="text-xl font-bold text-green-600">
-                              ₹{fd.fdMaturityAmount ? fd.fdMaturityAmount : "0"}
+                              ₹{fd.fdMaturityAmount ? Number(fd.fdMaturityAmount).toLocaleString("en-IN") : "0"}
                             </p>
                           </div>
                           <div>
@@ -633,7 +652,7 @@ function CustomerDetails() {
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Installment Amount</span>
-                        <p className="text-xl font-bold text-purple-600">₹{rd.rdInstallAmount?.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-purple-600">₹{Number(rd.rdInstallAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Total Installments</span>
@@ -693,7 +712,7 @@ function CustomerDetails() {
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm font-medium text-gray-600">RD Total DepositedtAmount</span>
-                        <p className="text-lg font-bold text-blue-600">{rd.rdTotalDepositedtAmount || 0}</p>
+                        <p className="text-lg font-bold text-blue-600">₹{Number(rd.rdTotalDepositedtAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">RD Total DepositedInstallment</span>
@@ -727,7 +746,7 @@ function CustomerDetails() {
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
-                        <p className="text-xl font-bold text-purple-600">₹{rd.rdMaturityAmount?.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-purple-600">₹{Number(rd.rdMaturityAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Status</span>
@@ -851,11 +870,11 @@ function CustomerDetails() {
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Loan PrincipalAmount Amount</span>
-                        <p className="text-xl font-bold text-purple-600">₹{loan.loanPrincipalAmount?.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-purple-600">₹{Number(loan.loanPrincipalAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Loan Emi Amount</span>
-                        <p className="text-lg font-semibold text-gray-800">₹{loan.loanEMIAmount}</p>
+                        <p className="text-lg font-semibold text-gray-800">₹{Number(loan.loanEMIAmount).toLocaleString("en-IN")}</p>
                       </div>
                     </div>
 
@@ -873,7 +892,7 @@ function CustomerDetails() {
                       <div>
                         <span className="text-sm font-medium text-gray-600">Outstanding Emis</span>
                         <p className="text-lg font-semibold text-gray-800">
-                          ₹{loan.loanOutstandingAmount || "N/A"}
+                          ₹{Number(loan.loanOutstandingAmount).toLocaleString("en-IN") || "N/A"}
                         </p>
                       </div>
                       <div>
@@ -883,8 +902,8 @@ function CustomerDetails() {
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-sm font-medium text-gray-600"> Total Emi Paid</span>
-                        <p className="text-lg font-bold text-blue-600">₹{loan.loanTotalEmiDeposited}</p>
+                        <span className="text-sm font-medium text-gray-600"> Total Emi Amount Deposited</span>
+                        <p className="text-lg font-bold text-blue-600">₹{Number(loan.loanTotalEmiDeposited).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600"> Total No. Emi Deposited</span>
@@ -998,12 +1017,12 @@ function CustomerDetails() {
 
                       <div>
                         <span className="text-sm font-medium text-gray-600">Pigmy Daily Deposit</span>
-                        <p className="text-lg font-semibold text-gray-800">₹{pigmy.pigmyDailyDeposit}</p>
+                        <p className="text-lg font-semibold text-gray-800">₹{Number(pigmy.pigmyDailyDeposit).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
                         <p className="text-lg font-semibold text-gray-800">
-                          ₹{pigmy.pigMyMaturityAmount || "N/A"}
+                          ₹{Number(pigmy.pigMyMaturityAmount).toLocaleString("en-IN")}
                         </p>
                       </div>
                     </div>
@@ -1049,7 +1068,7 @@ function CustomerDetails() {
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm font-medium text-gray-600"> Total Installment Paid</span>
-                        <p className="text-lg font-bold text-blue-600">₹{pigmy.pigMyTotalDepositedAmount}</p>
+                        <p className="text-lg font-bold text-blue-600">₹{Number(pigmy.pigMyTotalDepositedAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600"> Total No. InstallMent Deposited</span>
@@ -1184,12 +1203,12 @@ function CustomerDetails() {
 
                       <div>
                         <span className="text-sm font-medium text-gray-600">InstallMents Deposit Per Month</span>
-                        <p className="text-lg font-semibold text-gray-800">₹{lakhpatiSchemes.lakhpatiYojanaInstallAmount}</p>
+                        <p className="text-lg font-semibold text-gray-800">₹{Number(lakhpatiSchemes.lakhpatiYojanaInstallAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
                         <p className="text-lg font-semibold text-gray-800">
-                          ₹{lakhpatiSchemes.lakhpatiYojanaMaturityAmount || "N/A"}
+                          ₹{Number(lakhpatiSchemes.lakhpatiYojanaMaturityAmount).toLocaleString("en-IN")}
                         </p>
                       </div>
                     </div>
@@ -1234,8 +1253,8 @@ function CustomerDetails() {
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-sm font-medium text-gray-600"> Total Installment Paid</span>
-                        <p className="text-lg font-bold text-blue-600">₹{lakhpatiSchemes.lakhpatiYojanaTotalDepositedAmount}</p>
+                        <span className="text-sm font-medium text-gray-600"> Total Installment Paid Amount</span>
+                        <p className="text-lg font-bold text-blue-600">₹{Number(lakhpatiSchemes.lakhpatiYojanaTotalDepositedAmount).toLocaleString("en-IN")}</p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-600"> Total No. InstallMent Deposited</span>
@@ -1333,192 +1352,191 @@ function CustomerDetails() {
             </div>
           )}
         </div>
- {/* if MIP  */}
+        {/* if MIP  */}
 
 
-       <div className="bg-white rounded-2xl mb-8 shadow-lg p-8">
-  <div className="flex items-center justify-between mb-6">
-    <div className="bg-purple-100 p-3 flex gap-3 items-center rounded-full mr-4">
-      <FaChartLine className="text-purple-600 text-2xl" />
-      <h3 className="text-2xl font-bold text-gray-800">MIP Account</h3>
-    </div>
-
-    {customer?.mipSchemes?.length > 0 && (
-      <div className="flex gap-1">
-        <Link
-          to={`/create-mip/${customer.CustomerId}/${customer.savingAccountNumber}`}
-          className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-        >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Create New MIP Scheme
-        </Link>
-
-        <Link
-          to={`/coustomers/paymentdetails/${customer._id}/MIP`}
-          className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-200"
-        >
-          Payment Details
-        </Link>
-      </div>
-    )}
-  </div>
-
-  {customer?.mipSchemes?.length > 0 ? (
-    <div className="grid gap-6">
-      {customer.mipSchemes.map((mipScheme, i) => (
-        <div
-          key={i}
-          className="border-2 border-purple-200 rounded-xl p-6 bg-purple-50 hover:shadow-lg transition-shadow"
-        >
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm font-medium text-gray-600">MIP Account No</span>
-                <p className="text-lg font-bold text-gray-800">{mipScheme.mipAccountNumber}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Deposit Amount</span>
-                <p className="text-lg font-semibold text-gray-800">₹{mipScheme.mipDepositAmount}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
-                <p className="text-lg font-semibold text-gray-800">
-                  ₹{mipScheme.mipMaturityAmount || "N/A"}
-                </p>
-              </div>
+        <div className="bg-white rounded-2xl mb-8 shadow-lg p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="bg-purple-100 p-3 flex gap-3 items-center rounded-full mr-4">
+              <FaChartLine className="text-purple-600 text-2xl" />
+              <h3 className="text-2xl font-bold text-gray-800">MIP Account</h3>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm font-medium text-gray-600">Duration</span>
-                <p className="text-lg font-bold text-blue-600">
-                  {mipScheme.mipTenure} {mipScheme.mipTenureType}
-                </p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Opening Date</span>
-                <p className="text-lg font-semibold text-gray-800">
-                  {mipScheme.mipOpeningDate
-                    ? new Date(mipScheme.mipOpeningDate).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Maturity Date</span>
-                <p className="text-lg font-semibold text-gray-800">
-                  {mipScheme.mipMaturityDate
-                    ? new Date(mipScheme.mipMaturityDate).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm font-medium text-gray-600">Monthly Interest Pay</span>
-                <p className="text-lg font-bold text-blue-600">₹{mipScheme.mipMonthlyInterestPay}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Status</span>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
-                    mipScheme.mipAccountStatus === "active"
-                      ? "bg-green-200 text-green-800"
-                      : mipScheme.mipAccountStatus === "matured"
-                      ? "bg-blue-200 text-blue-800"
-                      : "bg-red-200 text-red-800"
-                  }`}
+            {customer?.mipSchemes?.length > 0 && (
+              <div className="flex gap-1">
+                <Link
+                  to={`/create-mip/${customer.CustomerId}/${customer.savingAccountNumber}`}
+                  className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
                 >
-                  {mipScheme.mipAccountStatus}
-                  {mipScheme?.mipCloseDate && (
-                    <span className="block text-xs font-normal text-gray-700">
-                      {new Date(mipScheme.mipCloseDate).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </span>
-                  )}
-                </span>
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Create New MIP Scheme
+                </Link>
+
+                <Link
+                  to={`/coustomers/paymentdetails/${customer._id}/MIP`}
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-200"
+                >
+                  Payment Details
+                </Link>
               </div>
+            )}
+          </div>
+
+          {customer?.mipSchemes?.length > 0 ? (
+            <div className="grid gap-6">
+              {customer.mipSchemes.map((mipScheme, i) => (
+                <div
+                  key={i}
+                  className="border-2 border-purple-200 rounded-xl p-6 bg-purple-50 hover:shadow-lg transition-shadow"
+                >
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">MIP Account No</span>
+                        <p className="text-lg font-bold text-gray-800">{mipScheme.mipAccountNumber}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Deposit Amount</span>
+                        <p className="text-lg font-semibold text-gray-800">₹{Number(mipScheme.mipDepositAmount).toLocaleString("en-IN")}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Maturity Amount</span>
+                        <p className="text-lg font-semibold text-gray-800">
+                          ₹{Number(mipScheme.mipMaturityAmount).toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Duration</span>
+                        <p className="text-lg font-bold text-blue-600">
+                          {mipScheme.mipTenure} {mipScheme.mipTenureType}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Opening Date</span>
+                        <p className="text-lg font-semibold text-gray-800">
+                          {mipScheme.mipOpeningDate
+                            ? new Date(mipScheme.mipOpeningDate).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                            : "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Maturity Date</span>
+                        <p className="text-lg font-semibold text-gray-800">
+                          {mipScheme.mipMaturityDate
+                            ? new Date(mipScheme.mipMaturityDate).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Monthly Interest Pay</span>
+                        <p className="text-lg font-bold text-blue-600">₹{mipScheme.mipMonthlyInterestPay}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Status</span>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${mipScheme.mipAccountStatus === "active"
+                            ? "bg-green-200 text-green-800"
+                            : mipScheme.mipAccountStatus === "matured"
+                              ? "bg-blue-200 text-blue-800"
+                              : "bg-red-200 text-red-800"
+                            }`}
+                        >
+                          {mipScheme.mipAccountStatus}
+                          {mipScheme?.mipCloseDate && (
+                            <span className="block text-xs font-normal text-gray-700">
+                              {new Date(mipScheme.mipCloseDate).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap justify-left text-left gap-4 items-center">
+                    {mipScheme.mipAccountStatus == "pending" && mipScheme.mipTotalDepositedAmount == 0 &&
+                      (
+                        <MipEmiPayModal mipScheme={mipScheme} customerId={customer._id} savingAc={customer.savingAccountNumber} />
+                      )}
+
+                    {mipScheme.mipAccountStatus !== "closed" &&
+                      mipScheme.mipDepositAmount > 0 && (
+                        <MipMaturityModal mipScheme={mipScheme} customer={customer} />
+                      )}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">📈</div>
+              <h4 className="text-xl font-semibold text-gray-600 mb-2">
+                No MIP Deposit Schemes Found
+              </h4>
+              <p className="text-gray-500">
+                This customer doesn't have any MIP schemes yet.
+              </p>
 
-          <div className="mt-6 flex justify-left text-left gap-4">
-            {/* {mipScheme.mipAccountStatus !== "closed" &&
-              mipScheme.mipAccountStatus !== "matured" && (
-                <MipEmiPayModal mipScheme={mipScheme} customerId={customer._id} savingAc={customer.savingAccountNumber} />
-              )} */}
-
-            {mipScheme.mipAccountStatus !== "closed" &&
-              mipScheme.mipDepositAmount > 0 && (
-                <MipMaturityModal mipScheme={mipScheme} customer={customer} />
-              )}
-          </div>
+              <Link
+                to={`/create-mip/${customer._id}/${customer.savingAccountNumber}`}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md mt-4"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create New MIP
+              </Link>
+            </div>
+          )}
         </div>
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-12">
-      <div className="text-gray-400 text-6xl mb-4">📈</div>
-      <h4 className="text-xl font-semibold text-gray-600 mb-2">
-        No MIP Deposit Schemes Found
-      </h4>
-      <p className="text-gray-500">
-        This customer doesn't have any MIP schemes yet.
-      </p>
-
-      <Link
-        to={`/create-mip/${customer._id}/${customer.savingAccountNumber}`}
-        className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md mt-4"
-      >
-        <svg
-          className="w-5 h-5 mr-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create New MIP
-      </Link>
-    </div>
-  )}
-</div>
 
 
       </div>

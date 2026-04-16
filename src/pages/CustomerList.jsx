@@ -51,7 +51,7 @@ export default function CustomerList() {
 
   const fetchAgents = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/agent?managerId=${managerId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/agent?managerId=${managerId}&all=true`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -66,7 +66,7 @@ export default function CustomerList() {
 
   const fetchAreaManagers = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/areaManager?managerId=${managerId}&all=true`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -495,7 +495,7 @@ export default function CustomerList() {
               <th className="px-4 py-2 border">Action</th>
             </tr>
           </thead>
-            <tbody>
+          <tbody>
             {customers.length ? customers.map((cust, idx) => (
               <tr key={cust._id} className="odd:bg-white even:bg-yellow-50">
                 <td className="px-4 py-2 border">{(page - 1) * limit + idx + 1}</td>
@@ -506,7 +506,9 @@ export default function CustomerList() {
 
                 <td className="px-4 py-2 border">0.00</td>
                 <td className="px-4 py-2 border">
-                  {Number(cust.savingAccountBalance || 0).toFixed(2)}
+                  {cust?.savingAccountBalance != null
+                    ? `₹${Number(cust.savingAccountBalance).toLocaleString('en-IN')}`
+                    : "0"}
                 </td>
 
                 {/* <td className="px-4 py-2 border"><a href={`mailto:${cust.email}`} className="text-blue-600 hover:underline">{cust.email}</a></td> */}
@@ -521,34 +523,37 @@ export default function CustomerList() {
                 </td>
 
                 <td className="px-4 py-2 border">{cust.address}</td>
-                <td className="px-4 py-2 border flex gap-2">
+                <td className="px-4 py-4 border flex gap-2">
                   <Link title="view" to={`/customers/view/${cust._id}`} className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded"><FaEye size={14} /></Link>
                   <Link title="edit" to={`/customers/edit/${cust._id}`} className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded"><FaPen size={14} /></Link>
                   <button title="delete" onClick={() => confirmDelete(cust._id)} className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded"><FaTrash size={14} /></button>
 
-                  <DepositBalanceModal
-                    customerId={cust._id}
-                    onDeposit={onDeposit}
-                  />
+                  <div title="deposit balance">
 
 
+                    <DepositBalanceModal
+                      customerId={cust._id}
+                      onDeposit={onDeposit}
+                    />
+
+                  </div>
                   <button
-                      title={
-                        cust.savingAccountStatus === "active"
-                          ? "Close Customer Account"
-                          : "Re-Open Customer Account"
-                      }
-                      onClick={() => toggleAccount({ customerId: cust._id, savingAccountStatus: cust.savingAccountStatus })}
-                      className={`flex items-center justify-center gap-2 px-3 py-2 mx-auto
+                    title={
+                      cust.savingAccountStatus === "active"
+                        ? "Close Customer Account"
+                        : "Re-Open Customer Account"
+                    }
+                    onClick={() => toggleAccount({ customerId: cust._id, savingAccountStatus: cust.savingAccountStatus })}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 mx-auto
       rounded-md text-sm font-medium transition
       ${cust.savingAccountStatus === "active"
-                          ? "bg-red-600 text-white hover:bg-red-700"
-                          : "bg-black text-white hover:bg-gray-800"
-                        }`}
-                    >
-                      {cust.savingAccountStatus === "active" ? <FaLock /> : <FaUnlock />}
-                      {/* {cust.savingAccountStatus === "active" ? "Close" : "Reopen"} */}
-                    </button>
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-black text-white hover:bg-gray-800"
+                      }`}
+                  >
+                    {cust.savingAccountStatus === "active" ? <FaLock /> : <FaUnlock />}
+                    {/* {cust.savingAccountStatus === "active" ? "Close" : "Reopen"} */}
+                  </button>
 
                 </td>
               </tr>

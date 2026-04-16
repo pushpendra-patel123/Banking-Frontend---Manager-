@@ -9,8 +9,8 @@ export default function LoanEmiPayModal({ loan, customerId }) {
     customerId: customerId || '',
     loanAccountNumber: loan?.loanAccountNumber || '',
     transactionType: 'emi',
-    amount: loan?.loanEMIAmount||'',
-    mode: ''
+    amount: loan?.loanEMIAmount || '',
+    mode: 'bankTransfer'
   });
   const [errors, setErrors] = useState({});
 
@@ -61,7 +61,7 @@ export default function LoanEmiPayModal({ loan, customerId }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-const token = sessionStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -75,15 +75,15 @@ const token = sessionStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/transactionSchemes/loanEmiTransaction`,
         formData,
-         {
-           headers: {
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
       if (response.data.success) {
-        alert('Loan EMI processed successfully!');
+        alert('Loan EMI processed successfully! Approve the Payment to complete the Transaction');
         closeModal();
       } else {
         alert(response.data.message || 'Failed to process Loan EMI.');
@@ -92,7 +92,7 @@ const token = sessionStorage.getItem("token");
       console.error('Error processing Loan EMI:', error);
       alert(
         error.response?.data?.message ||
-          'Failed to process Loan EMI. Please try again.'
+        'Failed to process Loan EMI. Please try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -111,7 +111,7 @@ const token = sessionStorage.getItem("token");
       customerId: customerId || '',
       loanAccountNumber: loan?.loanAccountNumber || '',
       transactionType: 'emi',
-     amount: loan?.loanEMIAmount||'',
+      amount: loan?.loanEMIAmount || '',
       mode: ''
     });
     setErrors({});
@@ -150,8 +150,12 @@ const token = sessionStorage.getItem("token");
               </button>
             </div>
 
+
+
+
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
 
               <div>
                 <label
@@ -164,15 +168,14 @@ const token = sessionStorage.getItem("token");
                   type="text"
                   id="loanType"
                   name="loanAccountNumber"
-                  value={loan.loanType+ " " +"Loan"}
+                  value={loan.loanType + " " + "Loan"}
                   disabled
-                
-                  className={`w-full px-4 py-3 text-red-600 capitalize border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.loanAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+
+                  className={`w-full px-4 py-3 text-red capitalize border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${errors.loanAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., LN1758360434566"
                 />
-             
+
               </div>
               {/* Loan Account Number */}
               <div>
@@ -189,9 +192,8 @@ const token = sessionStorage.getItem("token");
                   value={formData.loanAccountNumber}
                   disabled
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.loanAccountNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${errors.loanAccountNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., LN1758360434566"
                 />
                 {errors.loanAccountNumber && (
@@ -226,9 +228,8 @@ const token = sessionStorage.getItem("token");
                   disabled
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., 54166.67"
                   min="100"
                 />
@@ -243,7 +244,7 @@ const token = sessionStorage.getItem("token");
               </div>
 
               {/* Payment Mode */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Payment Mode *
                 </label>
@@ -251,11 +252,10 @@ const token = sessionStorage.getItem("token");
                   {paymentModes.map((mode) => (
                     <label
                       key={mode.value}
-                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                        formData.mode === mode.value
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${formData.mode === mode.value
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-300 hover:border-blue-300'
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -275,7 +275,7 @@ const token = sessionStorage.getItem("token");
                 {errors.mode && (
                   <p className="mt-1 text-sm text-red-600">{errors.mode}</p>
                 )}
-              </div>
+              </div> */}
             </form>
 
             {/* Transaction Summary */}
@@ -328,11 +328,10 @@ const token = sessionStorage.getItem("token");
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isSubmitting
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

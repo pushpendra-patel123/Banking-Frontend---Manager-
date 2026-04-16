@@ -7,7 +7,7 @@ const MipMaturityModal = ({ customer, mipScheme }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     savingAccountNumber: customer?.savingAccountNumber,
-    mipAccountNumber:mipScheme.mipAccountNumber,
+    mipAccountNumber: mipScheme.mipAccountNumber,
   });
   const [maturityData, setMaturityData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -34,17 +34,17 @@ const MipMaturityModal = ({ customer, mipScheme }) => {
     // const interestRate = scheme.mipInterestRate;
 
     // const interestEarned = (principalDeposited * interestRate * (tenureMonths / 12)) / 100;
-    const netPayable = principalDeposited ;
+    const netPayable = principalDeposited;
 
     setMaturityData({
       principalDeposited,
-    //   interestEarned,
+      //   interestEarned,
       netPayable,
       maturityDate: scheme.mipMaturityDate,
       canWithdraw: new Date(scheme.mipMaturityDate) <= now,
       tenureMonths,
-    //   isPremature: new Date() < new Date(scheme.mipMaturityDate),
-    //   penalty: new Date() < new Date(scheme.mipMaturityDate) ? interestEarned * 0.5 : 0, // example: 50% interest reduction for premature
+      //   isPremature: new Date() < new Date(scheme.mipMaturityDate),
+      //   penalty: new Date() < new Date(scheme.mipMaturityDate) ? interestEarned * 0.5 : 0, // example: 50% interest reduction for premature
     });
 
     setLoading(false);
@@ -100,7 +100,7 @@ const MipMaturityModal = ({ customer, mipScheme }) => {
   return (
     <div>
       {/* Trigger Button */}
-      <div className="mt-6 flex justify-left text-left">
+      <div className=" flex justify-left text-left">
         <button
           onClick={() => setIsOpen(true)}
           className="bg-purple-600 hover:bg-purple-500 mt-3 text-white px-4 py-2 rounded-lg shadow-md transition duration-200"

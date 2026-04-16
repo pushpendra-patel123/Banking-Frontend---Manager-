@@ -3,15 +3,14 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function CreateRDForm() {
-  const { customerId ,savingAc} = useParams();
+  const { customerId, savingAc } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     rdTenure: "",
-    // rdTenureType: "month",
     type: "standardRd",
-    // savingAccountNo: "",
     rdInstallAmount: "",
+    rdInterestRate: "6", // backend expects rdInterestRate
   });
 
   const [errors, setErrors] = useState({});
@@ -33,24 +32,69 @@ export default function CreateRDForm() {
     }
   };
 
- const validateForm = () => {
-  const newErrors = {};
+  const handleInterestRateChange = (e) => {
+    const raw = e.target.value;
 
-  if (!formData.rdTenure) {
-    newErrors.rdTenure = "RD Tenure is required";
-  } else if (formData.rdTenure <= 0) {
-    newErrors.rdTenure = "RD Tenure must be greater than 0";
-  }
+    if (raw === "" || raw === ".") {
+      setFormData((prev) => ({ ...prev, rdInterestRate: raw }));
+      setErrors((prev) => ({ ...prev, rdInterestRate: "" }));
+      return;
+    }
 
-  if (!formData.rdInstallAmount) {
-    newErrors.rdInstallAmount = "Installment Amount is required";
-  } else if (Number(formData.rdInstallAmount) < 500) {
-    newErrors.rdInstallAmount = "Minimum installment amount is ₹500";
-  }
+    if (!/^\d*\.?\d*$/.test(raw)) return;
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    const parts = raw.split(".");
+    const intPart = parts[0];
+    const decPart = parts[1];
+
+    if (intPart.length > 2) {
+      setErrors((prev) => ({
+        ...prev,
+        rdInterestRate: "Interest rate cannot exceed 99.99%",
+      }));
+      return;
+    }
+
+    if (decPart !== undefined && decPart.length > 2) return;
+
+    const numericValue = parseFloat(raw);
+    if (!isNaN(numericValue) && numericValue > 99.99) {
+      setErrors((prev) => ({
+        ...prev,
+        rdInterestRate: "Interest rate cannot exceed 99.99%",
+      }));
+      setFormData((prev) => ({ ...prev, rdInterestRate: raw }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, rdInterestRate: raw }));
+    setErrors((prev) => ({ ...prev, rdInterestRate: "" }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.rdTenure) {
+      newErrors.rdTenure = "RD Tenure is required";
+    } else if (formData.rdTenure <= 0) {
+      newErrors.rdTenure = "RD Tenure must be greater than 0";
+    }
+
+    if (!formData.rdInstallAmount) {
+      newErrors.rdInstallAmount = "Installment Amount is required";
+    } else if (Number(formData.rdInstallAmount) < 500) {
+      newErrors.rdInstallAmount = "Minimum installment amount is ₹500";
+    }
+
+    if (!formData.rdInterestRate || formData.rdInterestRate <= 0) {
+      newErrors.rdInterestRate = "Interest rate must be greater than 0";
+    } else if (Number(formData.rdInterestRate) > 99.99) {
+      newErrors.rdInterestRate = "Interest rate cannot exceed 99.99%";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const token = sessionStorage.getItem("token");
   const handleSubmit = async (e) => {
@@ -69,7 +113,7 @@ export default function CreateRDForm() {
         `${import.meta.env.VITE_API_URL}/customer/createRD/${customerId}`,
         formData,
         {
-           headers: {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         }
@@ -79,7 +123,6 @@ export default function CreateRDForm() {
         alert("Recurring Deposit created successfully!");
         setFormData({
           rdTenure: "",
-        //   rdTenureType: "month",
           type: "standardRd",
           savingAccountNo: "",
           rdInstallAmount: "",
@@ -92,7 +135,7 @@ export default function CreateRDForm() {
       console.error("Error creating RD:", error);
       alert(
         error.response?.data?.message ||
-          "Failed to create Recurring Deposit. Please try again."
+        "Failed to create Recurring Deposit. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -101,7 +144,7 @@ export default function CreateRDForm() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-       <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex items-center gap-4">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -109,7 +152,7 @@ export default function CreateRDForm() {
         >
           ← Back
         </button>
-        <h2 className="text-2xl font-bold text-gray-800">Create RD  Account</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Create RD Account</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -119,44 +162,44 @@ export default function CreateRDForm() {
             htmlFor="rdTenure"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            RD Tenure *
+            RD Tenure (months) *
           </label>
           <input
-            type="number"
-            id="rdTenure"
-            name="rdTenure"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={formData.rdTenure}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.rdTenure ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="Enter tenure (e.g., 36)"
+            onChange={(e) => {
+              const raw = e.target.value;
+
+              // Show error if decimal point is typed
+              if (raw.includes(".")) {
+                setErrors((prev) => ({
+                  ...prev,
+                  rdTenure: "Decimal values are not allowed in RD Tenure",
+                }));
+                return; // Don't update the value
+              }
+
+              // Strip any non-digit characters and limit to 3 digits
+              const value = raw.replace(/\D/g, "").slice(0, 3);
+
+              setFormData((prev) => ({ ...prev, rdTenure: value }));
+
+              // Clear error if valid
+              if (value) {
+                setErrors((prev) => ({ ...prev, rdTenure: "" }));
+              }
+            }}
+            maxLength={3}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.rdTenure ? "border-red-500" : "border-gray-300"
+              }`}
+            placeholder="Enter tenure in months (e.g., 36)"
           />
           {errors.rdTenure && (
             <p className="mt-1 text-sm text-red-600">{errors.rdTenure}</p>
           )}
         </div>
-
-        {/* RD Tenure Type */}
-        {/* <div>
-          <label
-            htmlFor="rdTenureType"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Tenure Type *
-          </label>
-          <select
-            id="rdTenureType"
-            name="rdTenureType"
-            value={formData.rdTenureType}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="month">Months</option>
-            <option value="year">Years</option>
-            <option value="day">Days</option>
-          </select>
-        </div> */}
 
         {/* Type */}
         <div>
@@ -179,32 +222,6 @@ export default function CreateRDForm() {
           </select>
         </div>
 
-        {/* Saving Account Number (disabled if auto-linked) */}
-        {/* <div>
-          <label
-            htmlFor="savingAccountNo"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Saving Account Number *
-          </label>
-          <input
-            type="text"
-            id="savingAccountNo"
-            name="savingAccountNo"
-            value={formData.savingAccountNo}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.savingAccountNo ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="Enter account number (e.g., 20000008)"
-          />
-          {errors.savingAccountNo && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.savingAccountNo}
-            </p>
-          )}
-        </div> */}
-
         {/* RD Installment Amount */}
         <div>
           <label
@@ -219,9 +236,13 @@ export default function CreateRDForm() {
             name="rdInstallAmount"
             value={formData.rdInstallAmount}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.rdInstallAmount ? "border-red-500" : "border-gray-300"
-            }`}
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.rdInstallAmount ? "border-red-500" : "border-gray-300"
+              }`}
             placeholder="Enter installment amount (e.g., 5000)"
           />
           {errors.rdInstallAmount && (
@@ -237,16 +258,39 @@ export default function CreateRDForm() {
           )}
         </div>
 
+        {/* RD Interest Rate */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Interest Rate (%) *
+          </label>
+          <input
+            type="text"
+            inputMode="decimal"
+            name="rdInterestRate"
+            value={formData.rdInterestRate}
+            onChange={handleInterestRateChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.rdInterestRate ? "border-red-500" : "border-gray-300"
+              }`}
+            placeholder="e.g. 8.50"
+          />
+          {errors.rdInterestRate ? (
+            <p className="mt-1 text-sm text-red-600">{errors.rdInterestRate}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-400">
+              Max 99.99%, up to 2 decimal places (e.g. 12.25)
+            </p>
+          )}
+        </div>
+
         {/* Submit Buttons */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
+            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
@@ -274,9 +318,7 @@ export default function CreateRDForm() {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-600">Tenure:</span>
-            <span className="ml-2">
-              {formData.rdTenure || "-"} month
-            </span>
+            <span className="ml-2">{formData.rdTenure || "-"} month</span>
           </div>
           <div>
             <span className="font-medium text-gray-600">Type:</span>
@@ -284,7 +326,7 @@ export default function CreateRDForm() {
           </div>
           <div>
             <span className="font-medium text-gray-600">Saving Account:</span>
-            <span className="ml-2">{savingAc|| "-"}</span>
+            <span className="ml-2">{savingAc || "-"}</span>
           </div>
           <div>
             <span className="font-medium text-gray-600">Installment:</span>
@@ -294,6 +336,10 @@ export default function CreateRDForm() {
                 ? parseInt(formData.rdInstallAmount).toLocaleString("en-IN")
                 : "-"}
             </span>
+          </div>
+          <div>
+            <span className="font-medium text-gray-600">Interest Rate:</span>
+            <span className="ml-2">{formData.rdInterestRate}%</span>
           </div>
         </div>
       </div>
